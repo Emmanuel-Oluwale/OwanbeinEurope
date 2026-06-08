@@ -4,6 +4,7 @@ import { eventSlug, getTicketOption } from '@/lib/eventData';
 import { paymentInstructionsHtml, sendBrevoEmail } from '@/lib/brevo';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { buildOrderNumber, buildQrPlatbaPayload, buildSequence, buildVariableSymbol, pickPaymentAccount, sanitizeEmail } from '@/lib/orderUtils';
+import { safeFilePart, uploadQrDataUrl } from '@/lib/qrStorage';
 
 type CreateOrderPayload = {
   eventSlug?: string;
@@ -143,6 +144,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Could not create order.' }, { status: 500 });
     }
 
+    let paymentQrUrl: string | null = null;
+    try {
+      paymentQrUrl = await uploadQrDataUrl(paymentQrCode, `qr/payment/${safeFilePart(orderNumber)}.png`);
+      if (paymentQrUrl) {
+        await supabase
+          .from('orders')
+          .update({ payment_qr_url: paymentQrUrl })
+          .eq('id', order.id);
+      }
+    } catch (qrError) {
+      console.error('Payment QR storage failed', qrError);
+    }
+
     const attendeeRows = attendees.map((attendee) => ({
       order_id: order.id,
       ticket_type_id: ticketTypeRow.id,
@@ -171,7 +185,9 @@ export async function POST(request: Request) {
           variableSymbol,
           accountName: paymentAccount.name,
           iban: paymentAccount.iban,
-          bic: paymentAccount.bic
+          bic: paymentAccount.bic,
+          paymentQrUrl,
+          orderLookupUrl: `https://owanbeineurope.cz/my-ticket?order=${encodeURIComponent(orderNumber)}`
         })
       });
     } catch (emailError) {

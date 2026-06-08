@@ -73,13 +73,28 @@ export function paymentInstructionsHtml(input: {
   accountName: string;
   iban: string;
   bic?: string;
+  paymentQrUrl?: string | null;
+  orderLookupUrl?: string;
 }) {
-  return `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111"><h1>Owanbe in Europe - order received</h1><p>Hello ${escapeHtml(input.name)},</p><p>Your reservation has been created. Please complete your bank transfer using the details below.</p><ul><li><strong>Order:</strong> ${escapeHtml(input.orderNumber)}</li><li><strong>Amount:</strong> ${input.amountCzk.toLocaleString('cs-CZ')} CZK</li><li><strong>Recipient:</strong> ${escapeHtml(input.accountName)}</li><li><strong>IBAN:</strong> ${escapeHtml(input.iban)}</li>${input.bic ? `<li><strong>BIC:</strong> ${escapeHtml(input.bic)}</li>` : ''}<li><strong>Variable symbol:</strong> ${escapeHtml(input.variableSymbol)}</li><li><strong>Message/reference:</strong> ${escapeHtml(input.orderNumber)}</li></ul><p>Your tickets will be issued after finance confirms your payment.</p><p>You can later find your order at <a href="https://owanbeineurope.cz/my-ticket">owanbeineurope.cz/my-ticket</a>.</p></div>`;
+  const orderLookupUrl = input.orderLookupUrl || `https://owanbeineurope.cz/my-ticket?order=${encodeURIComponent(input.orderNumber)}`;
+  return `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111"><h1>Owanbe in Europe - order received</h1><p>Hello ${escapeHtml(input.name)},</p><h2>Complete your payment</h2><p>Your reservation has been created. Please complete your bank transfer using the details below.</p>${input.paymentQrUrl ? `<p><img src="${escapeHtml(input.paymentQrUrl)}" width="250" alt="Payment QR code" /></p>` : ''}<ul><li><strong>Order Number:</strong> ${escapeHtml(input.orderNumber)}</li><li><strong>Amount:</strong> ${input.amountCzk.toLocaleString('cs-CZ')} CZK</li><li><strong>Recipient:</strong> ${escapeHtml(input.accountName)}</li><li><strong>IBAN:</strong> ${escapeHtml(input.iban)}</li>${input.bic ? `<li><strong>BIC:</strong> ${escapeHtml(input.bic)}</li>` : ''}<li><strong>Variable Symbol:</strong> ${escapeHtml(input.variableSymbol)}</li><li><strong>Message/reference:</strong> ${escapeHtml(input.orderNumber)}</li></ul><p><a href="${escapeHtml(orderLookupUrl)}" style="display:inline-block;background:#008751;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">View My Order</a></p><p>Your tickets will be issued after finance confirms your payment.</p><p>You can later find your order at <a href="${escapeHtml(orderLookupUrl)}">owanbeineurope.cz/my-ticket</a>.</p></div>`;
 }
 
-export function ticketReadyHtml(input: { name: string; orderNumber: string; ticketCodes: string[] }) {
-  const codes = input.ticketCodes.map((code) => `<li><strong>${escapeHtml(code)}</strong></li>`).join('');
-  return `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111"><h1>Your Owanbe in Europe ticket is ready</h1><p>Hello ${escapeHtml(input.name)},</p><p>Your payment has been confirmed and your ticket record is ready.</p><p><strong>Order:</strong> ${escapeHtml(input.orderNumber)}</p><p><strong>Ticket code(s):</strong></p><ul>${codes}</ul><p>View your QR ticket at <a href="https://owanbeineurope.cz/my-ticket">owanbeineurope.cz/my-ticket</a>.</p><p>Please bring your ticket code or QR code to check-in.</p></div>`;
+export function ticketReadyHtml(input: {
+  name: string;
+  orderNumber: string;
+  ticketCodes: string[];
+  attendeeNames?: string[];
+  ticketQrUrls?: Array<string | null | undefined>;
+  ticketLinks?: string[];
+}) {
+  const tickets = input.ticketCodes.map((code, index) => {
+    const ticketLink = input.ticketLinks?.[index] || `https://owanbeineurope.cz/my-ticket?ticket=${encodeURIComponent(code)}`;
+    const attendeeName = input.attendeeNames?.[index] || input.name;
+    const qrUrl = input.ticketQrUrls?.[index];
+    return `<div style="border:1px solid #ddd;border-radius:8px;padding:16px;margin:16px 0"><p><strong>Attendee:</strong> ${escapeHtml(attendeeName)}</p><p><strong>Ticket Code:</strong> ${escapeHtml(code)}</p>${qrUrl ? `<p><img src="${escapeHtml(qrUrl)}" width="250" alt="Ticket QR code" /></p>` : ''}<p><a href="${escapeHtml(ticketLink)}" style="display:inline-block;background:#008751;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">Open Ticket</a></p></div>`;
+  }).join('');
+  return `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111"><h1>Your Owanbe in Europe ticket is ready</h1><p>Hello ${escapeHtml(input.name)},</p><p>Your payment has been confirmed and your ticket record is ready.</p><p><strong>Order:</strong> ${escapeHtml(input.orderNumber)}</p>${tickets}<p>Please bring your ticket code or QR code to check-in.</p></div>`;
 }
 
 function escapeHtml(value: string) {

@@ -4,6 +4,7 @@ import { sendBrevoEmail, ticketReadyHtml } from '@/lib/brevo';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { makeTicketCode } from '@/lib/orderUtils';
 import { requireOrganizerRole } from '@/lib/organizerAuth';
+import { safeFilePart, uploadQrDataUrl } from '@/lib/qrStorage';
 
 export async function POST(request: Request) {
   const auth = await requireOrganizerRole(['finance']);
@@ -56,13 +57,21 @@ export async function POST(request: Request) {
 
   const ticketRows = await Promise.all(attendees.map(async (attendee, index) => {
     const ticketCode = makeTicketCode(order.order_number, index);
+    const qrCode = await QRCode.toDataURL(ticketCode, { margin: 1, width: 320 });
+    let qrImageUrl: string | null = null;
+    try {
+      qrImageUrl = await uploadQrDataUrl(qrCode, `qr/tickets/${safeFilePart(ticketCode)}.png`);
+    } catch (qrError) {
+      console.error('Ticket QR storage failed', qrError);
+    }
     return {
       order_id: order.id,
       ticket_type_id: attendee.ticket_type_id,
       attendee_name: attendee.attendee_name,
       attendee_email: attendee.attendee_email,
       ticket_code: ticketCode,
-      qr_code: await QRCode.toDataURL(ticketCode, { margin: 1, width: 320 }),
+      qr_code: qrCode,
+      qr_image_url: qrImageUrl,
       status: 'valid'
     };
   }));
@@ -70,7 +79,7 @@ export async function POST(request: Request) {
   const { data: tickets, error: ticketError } = await supabase
     .from('tickets')
     .insert(ticketRows)
-    .select('id, ticket_code, ticket_type_id');
+    .select('id, ticket_code, ticket_type_id, attendee_name, qr_image_url');
 
   if (ticketError || !tickets) {
     return NextResponse.json({ error: 'Could not issue tickets.' }, { status: 500 });
@@ -126,7 +135,10 @@ export async function POST(request: Request) {
       html: ticketReadyHtml({
         name: order.full_name,
         orderNumber: order.order_number,
-        ticketCodes: tickets.map((ticket) => ticket.ticket_code)
+        ticketCodes: tickets.map((ticket) => ticket.ticket_code),
+        attendeeNames: tickets.map((ticket) => ticket.attendee_name),
+        ticketQrUrls: tickets.map((ticket) => ticket.qr_image_url),
+        ticketLinks: tickets.map((ticket) => `https://owanbeineurope.cz/my-ticket?ticket=${encodeURIComponent(ticket.ticket_code)}`)
       })
     });
   } catch (emailError) {

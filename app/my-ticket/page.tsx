@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type LookupResult = {
   error?: string;
@@ -14,6 +14,7 @@ type LookupResult = {
     attendee_email: string;
     ticket_code: string;
     qr_code: string;
+    qr_image_url?: string | null;
     status: string;
   }>;
 };
@@ -24,18 +25,38 @@ export default function MyTicketPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<LookupResult | null>(null);
 
-  async function lookup(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const order = params.get('order');
+    const ticket = params.get('ticket');
+
+    if (ticket) {
+      lookupPayload({ ticketCode: ticket });
+      return;
+    }
+
+    if (order) {
+      setOrderNumber(order);
+      lookupPayload({ orderNumber: order });
+    }
+  }, []);
+
+  async function lookupPayload(payload: { orderNumber?: string; email?: string; ticketCode?: string }) {
     setLoading(true);
     setResult(null);
 
     const response = await fetch('/api/orders/lookup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderNumber, email })
+      body: JSON.stringify(payload)
     });
     setResult(await response.json());
     setLoading(false);
+  }
+
+  async function lookup(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await lookupPayload({ orderNumber, email });
   }
 
   return (
@@ -51,13 +72,13 @@ export default function MyTicketPage() {
           <div>
             <p className="kicker">Find My Ticket</p>
             <h1 className="section-title">Look up your reservation.</h1>
-            <p className="muted">Use the order number and buyer email from checkout. Pending orders show payment status; paid orders show issued tickets.</p>
+            <p className="muted">Use the order number and buyer email from checkout. Direct order and ticket links from email load automatically.</p>
           </div>
           <form className="checkout-form" onSubmit={lookup}>
             <label className="field-label">Order number</label>
             <input className="field" required value={orderNumber} onChange={(event) => setOrderNumber(event.target.value)} placeholder="OIE-2026-000001" />
             <label className="field-label">Buyer email</label>
-            <input className="field" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+            <input className="field" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
             <button className="button primary submit-button" type="submit" disabled={loading}>{loading ? 'Looking up...' : 'Find Order'}</button>
             {result && (
               <div className={`result-box ${result.error ? 'error' : ''}`}>
@@ -71,7 +92,7 @@ export default function MyTicketPage() {
                       <div className="attendee-box" key={ticket.ticket_code}>
                         <h3>{ticket.attendee_name}</h3>
                         <p>{ticket.attendee_email}</p>
-                        {ticket.qr_code && <img className="ticket-qr" src={ticket.qr_code} alt={`QR code for ${ticket.attendee_name}`} />}
+                        {(ticket.qr_image_url || ticket.qr_code) && <img className="ticket-qr" src={ticket.qr_image_url || ticket.qr_code} alt={`QR code for ${ticket.attendee_name}`} />}
                         <p><strong>{ticket.ticket_code}</strong></p>
                         <p>Status: {ticket.status}</p>
                       </div>

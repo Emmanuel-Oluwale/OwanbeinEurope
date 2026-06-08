@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const auth = await requireOrganizerRole(['finance']);
   if (!auth.authorized) return auth.response;
 
-  const payload = await request.json() as { orderId?: string; approvedBy?: string };
+  const payload = await request.json() as { orderId?: string };
 
   if (!payload.orderId) {
     return NextResponse.json({ error: 'Order ID is required.' }, { status: 400 });
@@ -25,25 +25,43 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
   }
 
-  if (order.payment_status === 'paid') {
-    return NextResponse.json({ error: 'Order is already paid.' }, { status: 409 });
-  }
-
   const attendees = order.order_attendees || [];
   if (!attendees.length) {
     return NextResponse.json({ error: 'Order has no attendee records.' }, { status: 400 });
   }
 
+  const { data: existingTickets, error: existingTicketsError } = await supabase
+    .from('tickets')
+    .select('id, ticket_code, ticket_type_id')
+    .eq('order_id', order.id);
+
+  if (existingTicketsError) {
+    return NextResponse.json({ error: 'Could not check existing tickets.' }, { status: 500 });
+  }
+
+  const hasLinkedTickets = attendees.some((attendee) => Boolean(attendee.ticket_id));
+  const hasExistingTickets = Boolean(existingTickets && existingTickets.length > 0);
+
+  if (order.payment_status === 'paid' || hasLinkedTickets || hasExistingTickets) {
+    if (order.payment_status !== 'paid') {
+      await supabase
+        .from('orders')
+        .update({ payment_status: 'paid', approved_by: auth.organizer.email, approved_at: new Date().toISOString() })
+        .eq('id', order.id);
+    }
+
+    return NextResponse.json({ ok: true, tickets: existingTickets || [] });
+  }
+
   const ticketRows = await Promise.all(attendees.map(async (attendee, index) => {
     const ticketCode = makeTicketCode(order.order_number, index);
-    const checkinUrl = `https://owanbeineurope.cz/checkin?ticket=${encodeURIComponent(ticketCode)}`;
     return {
       order_id: order.id,
       ticket_type_id: attendee.ticket_type_id,
       attendee_name: attendee.attendee_name,
       attendee_email: attendee.attendee_email,
       ticket_code: ticketCode,
-      qr_code: await QRCode.toDataURL(checkinUrl, { margin: 1, width: 320 }),
+      qr_code: await QRCode.toDataURL(ticketCode, { margin: 1, width: 320 }),
       status: 'valid'
     };
   }));
@@ -90,11 +108,7 @@ export async function POST(request: Request) {
 
   const { error: updateError } = await supabase
     .from('orders')
-    .update({
-      payment_status: 'paid',
-      approved_by: auth.organizer.email,
-      approved_at: new Date().toISOString()
-    })
+    .update({ payment_status: 'paid', approved_by: auth.organizer.email, approved_at: new Date().toISOString() })
     .eq('id', order.id);
 
   if (updateError) {

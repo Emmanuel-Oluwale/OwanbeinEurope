@@ -1,0 +1,1 @@
+Trigger latest Vercel deployment for current Next.js app structure.

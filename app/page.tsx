@@ -1,142 +1,507 @@
-import { TicketGrid } from '@/app/components/TicketGrid';
-import { eventDetails } from '@/lib/eventData';
+import './home-design.css';
+import { HomeClient } from './HomeClient';
+import { eventDetails, ticketOptions } from '@/lib/eventData';
 
-const experiences = [
-  ['Naija Beats', 'Afrobeats, amapiano, classics, and party anthems built for a real dance floor.'],
-  ['Food & Flavors', 'A celebration shaped around familiar tastes, shared tables, and generous energy.'],
-  ['African Royalty', 'Geles, agbadas, lace, aso-ebi energy, bold colors, and premium cultural fashion.'],
-  ['Community Vibes', 'Friends, new connections, photos, laughter, and the feeling of home in Europe.']
-];
+const CHECK_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+    <path d="M5 12l5 5 9-11" />
+  </svg>
+);
 
-const faqs = [
-  ['How do I reserve?', 'Choose a ticket tier, enter buyer and attendee details, then pay by Czech bank transfer using your unique reference.'],
-  ['When do I get tickets?', 'Finance confirms payment manually. Once approved, each attendee receives a unique ticket code and QR-ready record.'],
-  ['Are payments refundable?', 'Contributions are final because funds are used to secure venue, catering, music, and production.']
-];
+const ticketMeta: Record<string, { features: string[]; style: 'primary' | 'ghost'; label: string; vip?: boolean }> = {
+  'early-bird': {
+    features: ['Founding community access', 'Limited availability'],
+    style: 'ghost',
+    label: 'Get Early Access'
+  },
+  regular: {
+    features: ['Full event access', 'Standard entry'],
+    style: 'primary',
+    label: 'Reserve Ticket'
+  },
+  'late-registration': {
+    features: ['Final release batch', 'Full event access'],
+    style: 'ghost',
+    label: 'Last Chance Access'
+  },
+  vip: {
+    features: ['Premium entry', 'Priority experience', 'Elevated seating feel'],
+    style: 'primary',
+    label: 'Upgrade Experience',
+    vip: true
+  }
+};
 
 export default function HomePage() {
   return (
-    <main>
-      <header className="header">
-        <nav className="container nav">
-          <a className="logo" href="/">Owanbe in Europe</a>
-          <div className="nav-links">
-            <a href="#event">Event</a>
-            <a href="#tickets">Tickets</a>
-            <a href="#faq">FAQ</a>
-            <a href={eventDetails.instagramUrl}>Instagram</a>
-            <a href="/my-ticket">Find My Ticket</a>
+    <div className="ow-page">
+
+      {/* ===== NAV ===== */}
+      <nav className="nav" id="ow-nav">
+        <a className="brand" href="#top">
+          <span className="crest">O</span>
+          <span className="bt">
+            <b>Owanbe</b>
+            <span>in Europe</span>
+          </span>
+        </a>
+        <div className="nav-links">
+          <a href="#homecoming">The Homecoming</a>
+          <a href="#experience">Experience</a>
+          <a href="#details">Event</a>
+          <a href="#tickets">Access</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <div className="nav-cta">
+          <a href="/checkout" className="btn btn-primary">Reserve Your Spot</a>
+          <button className="nav-toggle" id="navToggle" aria-label="Open menu">
+            <span /><span /><span />
+          </button>
+        </div>
+      </nav>
+
+      <div className="mobile-menu" id="mobileMenu">
+        <a href="#homecoming">The Homecoming</a>
+        <a href="#experience">Experience</a>
+        <a href="#details">Event</a>
+        <a href="#tickets">Access</a>
+        <a href="#faq">FAQ</a>
+        <a href="/checkout" className="btn btn-primary">Reserve Your Spot</a>
+      </div>
+
+      {/* ===== HERO ===== */}
+      <header className="hero grain" id="top">
+        <div className="hero-bg" id="heroBg">
+          <video className="hero-video" autoPlay muted loop playsInline>
+            <source src="https://qowshteywtbilyybqkwm.supabase.co/storage/v1/object/public/event-media/Hero.mp4" type="video/mp4" />
+          </video>
+        </div>
+        <div className="hero-tint" />
+        <div className="hero-scrim" />
+        <div className="hero-inner" style={{ paddingLeft: '74px', paddingRight: '74px' }}>
+          <div className="reveal in">
+            <span className="hero-sub">NAIJA TO PRAGUE</span>
+            <h1 className="h-display">Europe&rsquo;s home of Owanbe Culture</h1>
+            <p className="hero-tagline">
+              A community Owanbe experience in the heart of Prague — music, fashion, food and family, the way home feels.
+            </p>
           </div>
-          <a className="button primary compact" href="/checkout">Get Access</a>
-        </nav>
+          <div className="hero-meta reveal in" data-d="1">
+            <span className="mi">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                <path d="M12 21s7-5.7 7-11a7 7 0 1 0-14 0c0 5.3 7 11 7 11Z" /><circle cx="12" cy="10" r="2.6" />
+              </svg>
+              {eventDetails.city}, {eventDetails.country}
+            </span>
+            <span className="mi">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                <rect x="3.5" y="5" width="17" height="16" rx="2.5" /><path d="M3.5 9.5h17M8 3v4M16 3v4" />
+              </svg>
+              {eventDetails.dateLabel}
+            </span>
+            <span className="mi">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                <circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 2" />
+              </svg>
+              3:00 PM – 8:00 PM
+            </span>
+          </div>
+          <div className="hero-actions reveal in" data-d="2">
+            <a href="/checkout" className="btn btn-primary btn-lg">
+              Reserve Your Spot
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </a>
+            <a href="#experience" className="btn btn-ghost btn-lg">View Experience</a>
+          </div>
+        </div>
+        <div className="scroll-hint">
+          <span>Scroll</span>
+          <span className="line" />
+        </div>
       </header>
 
-      <section className="hero home-hero">
-        <div className="container grid two hero-grid">
-          <div>
-            <p className="badge">Premium Nigerian celebration in Prague</p>
-            <h1 className="title">Naija to Prague</h1>
-            <p className="subtitle">African Royalty. Naija beats. Prague energy. A community-driven Owanbe experience with music, food, fashion, culture, and people who came ready.</p>
-            <div className="actions">
-              <a className="button primary" href="/checkout">Reserve Your Spot</a>
-              <a className="button secondary" href="/events/naija-to-prague-2026">View Event Details</a>
-            </div>
-            <div className="countdown" aria-label="Event countdown">
-              <div><strong>2026</strong><span>Year</span></div>
-              <div><strong>Aug 15</strong><span>Date</span></div>
-              <div><strong>2 PM</strong><span>Red carpet</span></div>
-              <div><strong>3-8 PM</strong><span>Main event</span></div>
-            </div>
+      {/* ===== HOMECOMING ===== */}
+      <section className="section bg-ivory" id="homecoming">
+        <div className="wrap split">
+          <div className="col-text">
+            <span className="eyebrow reveal">WHAT IS OWANBE IN EUROPE</span>
+            <h2 className="h-section reveal" data-d="1">
+              More than a party.<br />A <span className="serif-em">homecoming</span>.
+            </h2>
+            <p className="lead reveal" data-d="2" style={{ textAlign: 'justify' }}>
+              Owanbe in Europe is a cultural experience built for Africans in the diaspora, and anyone who wants to feel the energy of a Nigerian celebration. Music, fashion, food and community, gathered into one room for one unforgettable evening.
+            </p>
+            <blockquote className="pull-quote reveal" data-d="3">
+              If you&rsquo;ve missed home, this is where you find it again.
+            </blockquote>
           </div>
-          <div className="flyer-card" aria-label="Owanbe in Europe flyer placeholder">
-            <div className="flyer-content">
-              <p className="flyer-sub">Owanbe in Europe presents</p>
-              <div>
-                <div className="flyer-people" />
-                <h2 className="flyer-title">Naija to Prague</h2>
+          <div className="col-media reveal" data-d="2">
+            <div className="media-stack">
+              <div className="ph front" data-tone="sand">
+                <img src="/images/asoebi-guests.jpeg" alt="Aso-ebi guests in coordinated navy and green attire" />
               </div>
-              <div>
-                <p className="flyer-sub">{eventDetails.dateLabel}</p>
-                <p>{eventDetails.venueName}</p>
+              <div className="ph back">
+                <img src="/images/gele-closeup.jpeg" alt="Gold gele head-tie close-up" />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="detail-strip" id="event">
-        <div className="container stat-strip">
-          <div className="stat"><strong>Aug 15</strong><span>Saturday, 2026</span></div>
-          <div className="stat"><strong>Prague</strong><span>Czech Republic</span></div>
-          <div className="stat"><strong>Royalty</strong><span>African dress code</span></div>
-          <div className="stat"><strong>3-8 PM</strong><span>Main celebration</span></div>
-        </div>
-      </section>
-
-      <section className="section pattern-section">
-        <div className="container">
-          <p className="kicker">The Experience</p>
-          <h2 className="section-title">A proper Owanbe mood, brought into the heart of Europe.</h2>
-          <div className="grid four">
-            {experiences.map(([title, copy]) => (
-              <article className="card accent-card" key={title}>
-                <h3>{title}</h3>
-                <p className="muted">{copy}</p>
-              </article>
-            ))}
+      {/* ===== EXPERIENCE PILLARS ===== */}
+      <section className="section bg-sand grain" id="experience">
+        <div className="wrap">
+          <div style={{ maxWidth: '620px' }}>
+            <span className="eyebrow reveal">The Experience</span>
+            <h2 className="h-section reveal" data-d="1" style={{ marginTop: '20px' }}>
+              Four things you&rsquo;ll feel the moment you walk in.
+            </h2>
+          </div>
+          <div className="pillars">
+            <article className="pillar reveal" data-d="1">
+              <span className="num">01</span>
+              <span className="pic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" />
+                </svg>
+              </span>
+              <h3>Music &amp; Energy</h3>
+              <p>Afrobeats, amapiano, highlife and the classics, a floor that never sits down.</p>
+            </article>
+            <article className="pillar reveal" data-d="2">
+              <span className="num">02</span>
+              <span className="pic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="M4 3v7a3 3 0 0 0 6 0V3M7 10v11M14 3c-1.5 0-2.5 2-2.5 5s1 4 2.5 4 2.5-1 2.5-4-1-5-2.5-5ZM16.5 12v9" />
+                </svg>
+              </span>
+              <h3>Food &amp; Culture</h3>
+              <p>Shared tables, Nigerian flavours and the familiar taste of home, plated with care.</p>
+            </article>
+            <article className="pillar reveal" data-d="3">
+              <span className="num">03</span>
+              <span className="pic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8Z" />
+                </svg>
+              </span>
+              <h3>Fashion &amp; Royalty</h3>
+              <p>Aso-ebi, gele, agbada, lace, where elegance and identity arrive together.</p>
+            </article>
+            <article className="pillar reveal" data-d="4">
+              <span className="num">04</span>
+              <span className="pic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <circle cx="9" cy="8" r="3" /><circle cx="17" cy="9" r="2.4" />
+                  <path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5M15 19c0-2 1-3.4 2.6-3.8" />
+                </svg>
+              </span>
+              <h3>Community</h3>
+              <p>People, laughter, photos and connections that feel like they&rsquo;ve always been there.</p>
+            </article>
           </div>
         </div>
       </section>
 
-      <section className="section" id="tickets">
-        <div className="container">
-          <div className="section-head">
+      {/* ===== GALLERY ===== */}
+      <section className="section bg-green grain">
+        <div className="wrap">
+          <div className="gallery-head">
             <div>
-              <p className="kicker">Tickets</p>
-              <h2 className="section-title">Choose your access tier.</h2>
+              <span className="eyebrow reveal">Visual Culture</span>
+              <h2 className="h-section reveal" data-d="1" style={{ marginTop: '18px' }}>The Owanbe Mood</h2>
             </div>
-            <a className="button green" href="/checkout">Start Checkout</a>
+            <p className="lead reveal" data-d="2" style={{ color: 'color-mix(in oklab, var(--ivory) 72%, transparent)', marginBottom: '8px' }}>
+              This is what Prague will feel like on August&nbsp;15.
+            </p>
           </div>
-          <TicketGrid />
+          <div className="gallery">
+            <div className="ph g-tall reveal" data-tone="gold">
+              <img src="/images/gallery/gele-detail.jpeg" alt="Green gele and head-tie detail" />
+            </div>
+            <div className="ph reveal" data-d="1">
+              <img src="/images/gallery/money-spray.jpeg" alt="Money spray on the celebrant" />
+            </div>
+            <div className="ph g-wide reveal" data-d="2" data-tone="sand">
+              <img src="/images/gallery/crowd-energy.jpeg" alt="Crowd energy on the dance floor" />
+            </div>
+            <div className="ph reveal" data-d="1" data-tone="char">
+              <img src="/images/gallery/small-chops.jpeg" alt="Small chops platter" />
+            </div>
+            <div className="ph reveal" data-d="2">
+              <img src="/images/gallery/dancing-aunties.jpeg" alt="Dancing aunties in aso-ebi" />
+            </div>
+            <div className="ph g-tall reveal" data-d="3" data-tone="sand">
+              <img src="/images/gallery/asoebi-full.jpeg" alt="Full-length aso-ebi agbada" />
+            </div>
+            <div className="ph reveal" data-d="1" data-tone="gold">
+              <img src="/images/gallery/jollof.jpeg" alt="Nigerian jollof rice" />
+            </div>
+            <div className="ph g-wide reveal" data-d="2">
+              <img src="/images/gallery/drummers.jpeg" alt="Live band and drummers on stage" style={{ objectFit: 'cover' }} />
+            </div>
+            <div className="ph reveal" data-d="3" data-tone="char">
+              <img src="/images/gallery/hands-fabric.jpeg" alt="Hands and lace fabric detail" />
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="section ivory-band">
-        <div className="container grid two">
+      {/* ===== EVENT DETAILS ===== */}
+      <section className="section bg-ivory" id="details">
+        <div className="wrap event-spread">
+          <div className="event-poster reveal">
+            <div className="ph" data-tone="gold">
+              <img src="/images/event-portrait.jpeg" alt="Couple in coordinated aso-ebi attire" />
+            </div>
+          </div>
+          <div className="event-copy">
+            <span className="eyebrow reveal">The Event</span>
+            <h2 className="event-title reveal" data-d="1" style={{ marginTop: '16px' }}>
+              Naija to<br />Prague <span className="yr">2026</span>
+            </h2>
+            <p className="lead reveal" data-d="2" style={{ marginTop: '24px' }}>
+              A curated Owanbe experience bringing together diaspora culture, music, food and celebration in one unforgettable evening.
+            </p>
+            <div className="detail-list reveal" data-d="3">
+              <div className="row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <path d="M12 21s7-5.7 7-11a7 7 0 1 0-14 0c0 5.3 7 11 7 11Z" /><circle cx="12" cy="10" r="2.6" />
+                </svg>
+                <span className="k">Venue</span>
+                <span className="v">{eventDetails.venueName}</span>
+              </div>
+              <div className="row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <rect x="3.5" y="5" width="17" height="16" rx="2.5" /><path d="M3.5 9.5h17M8 3v4M16 3v4" />
+                </svg>
+                <span className="k">Date</span>
+                <span className="v">{eventDetails.dateLabel}</span>
+              </div>
+              <div className="row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 2" />
+                </svg>
+                <span className="k">Time</span>
+                <span className="v">{eventDetails.mainTimeLabel}</span>
+              </div>
+              <div className="row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <path d="M5 16l-1.5-7 4.5 3L12 6l3.5 6 4.5-3L18.5 16H5Z" /><path d="M5 19h13.5" />
+                </svg>
+                <span className="k">Dress Code</span>
+                <span className="v">{eventDetails.dressCode}</span>
+              </div>
+            </div>
+            <a href="/checkout" className="btn btn-primary btn-lg reveal" data-d="3" style={{ marginTop: '34px' }}>
+              Reserve Your Spot
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== TICKETS ===== */}
+      <section className="section bg-sand grain" id="tickets">
+        <div className="wrap">
+          <div className="tickets-head">
+            <span className="eyebrow center reveal">Reserve</span>
+            <h2 className="h-section reveal" data-d="1">Choose your access</h2>
+            <p className="lead reveal" data-d="2" style={{ textAlign: 'center' }}>
+              Every tier is one room, one night, one family. Choose the entrance that suits you.
+            </p>
+          </div>
+          <div className="ticket-grid">
+            {ticketOptions.map((ticket, i) => {
+              const meta = ticketMeta[ticket.id] ?? { features: [], style: 'ghost' as const, label: 'Reserve', vip: false };
+              return (
+                <article key={ticket.id} className={`ticket reveal${meta.vip ? ' feature' : ''}`} data-d={String(i + 1)}>
+                  {meta.vip && <span className="ribbon">VIP</span>}
+                  <span className="tier">
+                    <svg className="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                      {meta.vip
+                        ? <path d="M5 19l-1-9 4 3 4-6 4 6 4-3-1 9H5Z" />
+                        : ticket.id === 'early-bird'
+                          ? <path d="M12 3v18M5 8l7-5 7 5" />
+                          : ticket.id === 'regular'
+                            ? <><circle cx="12" cy="12" r="9" /><path d="M9 12l2 2 4-4" /></>
+                            : <path d="M5 19l-1-9 4 3 4-6 4 6 4-3-1 9H5Z" />
+                      }
+                    </svg>
+                    {ticket.name}
+                  </span>
+                  <div className="price">{ticket.price.toLocaleString('cs-CZ')} <small>CZK</small></div>
+                  <ul className="feats">
+                    {meta.features.map((f) => (
+                      <li key={f}>{CHECK_ICON}{f}</li>
+                    ))}
+                  </ul>
+                  <a href="/checkout" className={`btn btn-${meta.style}${meta.style === 'ghost' && !meta.vip ? ' on-light' : ''}`}>
+                    {meta.label}
+                  </a>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== OFFICIAL INVITATION ===== */}
+      <section className="section invite grain">
+        <div className="poster-bg">
+          <div className="ph">
+            <img src="/images/owanbe-flyer.jpeg" alt="" />
+          </div>
+        </div>
+        <div className="scrim2" />
+        <div className="wrap invite-inner invite-spread">
+          <a
+            className="flyer-card reveal"
+            href="/images/owanbe-flyer.jpeg"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open the official flyer full size"
+          >
+            <img src="/images/owanbe-flyer.jpeg" alt="Owanbe in Europe official flyer — From Naija to Prague, Saturday 15th August 2026" />
+            <span className="flyer-zoom">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3M11 8v6M8 11h6" />
+              </svg>
+            </span>
+          </a>
+          <div className="invite-copy reveal" data-d="1">
+            <span className="soon">The Official Invitation</span>
+            <h2 className="h-section" style={{ color: 'var(--ivory)' }}>
+              You&rsquo;re<br />invited.
+            </h2>
+            <p className="lead" style={{ color: 'color-mix(in oklab, var(--ivory) 80%, transparent)' }}>
+              Fashion, dance, food and full media coverage — from Naija to Prague. Save the flyer, share it with your people, and come dressed as royalty.
+            </p>
+            <ul className="invite-meta">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <path d="M12 21s7-5.7 7-11a7 7 0 1 0-14 0c0 5.3 7 11 7 11Z" /><circle cx="12" cy="10" r="2.6" />
+                </svg>
+                {eventDetails.venueName} · {eventDetails.venueAddress}
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <rect x="3.5" y="5" width="17" height="16" rx="2.5" /><path d="M3.5 9.5h17M8 3v4M16 3v4" />
+                </svg>
+                {eventDetails.dateLabel}
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="4" />
+                  <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
+                </svg>
+                @owanbeineurope
+              </li>
+            </ul>
+            <div className="invite-actions">
+              <a href="/images/owanbe-flyer.jpeg" download="Owanbe-in-Europe-Flyer.jpeg" className="btn btn-primary btn-lg">
+                Download Flyer
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 4v11M7 11l5 5 5-5M5 20h14" />
+                </svg>
+              </a>
+              <a href="/checkout" className="btn btn-ghost btn-lg">Reserve Your Spot</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FAQ ===== */}
+      <section className="section bg-ivory" id="faq">
+        <div className="wrap faq-wrap">
           <div>
-            <p className="kicker">Official Flyer</p>
-            <h2 className="section-title">Ready for the real visual.</h2>
-            <p className="muted dark">Place the official flyer at <strong>public/hero-flyer.jpeg</strong> or upload it later through Supabase event-media. Until then, the page keeps a premium flyer-inspired placeholder.</p>
+            <span className="eyebrow reveal">Good to Know</span>
+            <h2 className="h-section reveal" data-d="1" style={{ marginTop: '18px' }}>Questions, answered.</h2>
+            <p className="lead reveal" data-d="2" style={{ marginTop: '22px' }}>
+              Anything else? Reach us on Instagram — we reply to every message.
+            </p>
           </div>
-          <div className="mini-flyer">
-            <span>OIE</span>
-            <strong>Naija to Prague</strong>
-            <small>African Royalty Edition</small>
-          </div>
-        </div>
-      </section>
-
-      <section className="section" id="faq">
-        <div className="container">
-          <p className="kicker">FAQ & Policy</p>
-          <div className="grid three">
-            {faqs.map(([q, a]) => (
-              <article className="card" key={q}>
-                <h3>{q}</h3>
-                <p className="muted">{a}</p>
-              </article>
+          <div className="faq-list reveal" data-d="1">
+            {[
+              ['How do I get my ticket?', 'Fill in your details at checkout and pay by Czech bank transfer using your unique reference number. Finance confirms payment manually — once approved, each attendee receives a unique ticket code and QR ready for entry on the night.'],
+              ['Are tickets refundable?', 'No. Funds go directly toward production, venue and catering — the things that make the night feel like home. Please reserve only when you\'re sure.'],
+              ['Can I come alone?', 'Absolutely. Many attendees come solo and connect on-site. Owanbe is built for it — you\'ll leave with new people in your corner.'],
+              ['What should I wear?', 'The dress code is African Royalty. Aso-ebi, gele, agbada, lace, or your finest interpretation of elegance. Come dressed to be photographed.'],
+              ['Who are the organizers?', 'We\'re a community of friends and like-minded individuals who came together to feel and give back a little bit of home, outside of home. Owanbe in Europe is built by the diaspora, for the diaspora.']
+            ].map(([q, a]) => (
+              <div className="faq-item" key={q}>
+                <button className="faq-q">{q}<span className="ic" /></button>
+                <div className="faq-a"><p>{a}</p></div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ===== FINAL CTA ===== */}
+      <section className="section bg-green-deep final grain">
+        <div className="ph">
+          <img src="/images/final-group.jpeg" alt="Family in coordinated blue aso-ebi" />
+        </div>
+        <div className="final-tint" />
+        <div className="wrap final-inner">
+          <span className="eyebrow center reveal">August 15 · Prague</span>
+          <h2 className="reveal" data-d="1">Prague is waiting.<br /><em>Home is calling.</em></h2>
+          <div className="final-actions reveal" data-d="2">
+            <a href="/checkout" className="btn btn-primary btn-lg">
+              Reserve Your Spot
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </a>
+            <a href={eventDetails.instagramUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-lg">
+              Follow on Instagram
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="4" />
+                <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FOOTER ===== */}
       <footer className="footer">
-        <div className="container footer-grid">
-          <span>Owanbe in Europe</span>
-          <a href={eventDetails.instagramUrl}>Instagram @owanbeineurope</a>
-          <a href={`mailto:${eventDetails.email}`}>{eventDetails.email}</a>
+        <div className="footer-inner">
+          <div>
+            <a className="brand" href="#top">
+              <span className="crest">O</span>
+              <span className="bt">
+                <b>Owanbe</b>
+                <span style={{ fontSize: '13px' }}>in Europe</span>
+              </span>
+            </a>
+            <p className="footer-tag">
+              African Royalty meets Owanbe Nightlife. A community Owanbe experience in the heart of Prague.
+            </p>
+          </div>
+          <div className="footer-col">
+            <h4>Explore</h4>
+            <a href="#homecoming">The Homecoming</a>
+            <a href="#experience">The Experience</a>
+            <a href="#details">Event Details</a>
+            <a href="#tickets">Access &amp; Tickets</a>
+            <a href="#faq">FAQ</a>
+          </div>
+          <div className="footer-col">
+            <h4>Connect</h4>
+            <a href={eventDetails.instagramUrl} target="_blank" rel="noopener noreferrer">
+              Instagram — @owanbeineurope
+            </a>
+            <a href={`mailto:${eventDetails.email}`}>{eventDetails.email}</a>
+            <p>{eventDetails.venueName}<br />{eventDetails.city}</p>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <span>© 2026 Owanbe in Europe. Naija to Prague.</span>
+          <span>Made with love for the diaspora.</span>
         </div>
       </footer>
-    </main>
+
+      <HomeClient />
+    </div>
   );
 }

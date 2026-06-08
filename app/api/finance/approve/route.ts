@@ -47,7 +47,7 @@ export async function POST(request: Request) {
   const { data: tickets, error: ticketError } = await supabase
     .from('tickets')
     .insert(ticketRows)
-    .select('id, ticket_code');
+    .select('id, ticket_code, ticket_type_id');
 
   if (ticketError || !tickets) {
     return NextResponse.json({ error: 'Could not issue tickets.' }, { status: 500 });
@@ -57,6 +57,32 @@ export async function POST(request: Request) {
     .from('order_attendees')
     .update({ ticket_id: ticket.id })
     .eq('id', attendees[index].id)));
+
+  const soldByTicketType = attendees.reduce<Record<string, number>>((acc, attendee) => {
+    acc[attendee.ticket_type_id] = (acc[attendee.ticket_type_id] || 0) + 1;
+    return acc;
+  }, {});
+
+  for (const [ticketTypeId, soldCount] of Object.entries(soldByTicketType)) {
+    const { data: ticketType, error: ticketTypeError } = await supabase
+      .from('ticket_types')
+      .select('quantity_sold')
+      .eq('id', ticketTypeId)
+      .single();
+
+    if (ticketTypeError || !ticketType) {
+      return NextResponse.json({ error: 'Tickets were issued, but inventory could not be loaded.' }, { status: 500 });
+    }
+
+    const { error: inventoryError } = await supabase
+      .from('ticket_types')
+      .update({ quantity_sold: Number(ticketType.quantity_sold || 0) + soldCount })
+      .eq('id', ticketTypeId);
+
+    if (inventoryError) {
+      return NextResponse.json({ error: 'Tickets were issued, but inventory could not be updated.' }, { status: 500 });
+    }
+  }
 
   const { error: updateError } = await supabase
     .from('orders')

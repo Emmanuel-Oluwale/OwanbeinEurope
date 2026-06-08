@@ -6,6 +6,7 @@ Public Supabase values:
 
 - NEXT_PUBLIC_SUPABASE_URL
 - NEXT_PUBLIC_SUPABASE_ANON_KEY
+- ORDER_PREFIX
 
 Private payment account values. Do not prefix these with NEXT_PUBLIC.
 

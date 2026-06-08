@@ -1,27 +1,10 @@
-const tickets = [
-  { name: 'Early Bird', price: '1,000 CZK' },
-  { name: 'Regular', price: '1,200 CZK' },
-  { name: 'Late Registration', price: '1,500 CZK' },
-  { name: 'VIP', price: '2,500 CZK' }
-];
+import { eventDetails, ticketOptions } from '@/lib/eventData';
 
 const faqs = [
-  {
-    q: 'What kind of event is this?',
-    a: 'This is a strictly non-commercial, private gathering of friends and community members. We are coming together to celebrate our shared culture and enjoy a genuine Naija-style Owanbe in Prague.'
-  },
-  {
-    q: 'What does the contribution cover?',
-    a: 'Your payment is a financial contribution as an attendee. Contributions go toward covering the communal costs of the venue, food, music, and production.'
-  },
-  {
-    q: 'Can I get a refund if my plans change?',
-    a: 'No. Contributions are final because funds are pooled and used to secure the venue, catering, and event setup.'
-  },
-  {
-    q: 'What is the dress code?',
-    a: 'African Royalty. Step out in your finest traditional African clothing, vibrant colors, geles, agbadas, and majestic styles fitting for a true Owanbe.'
-  }
+  ['What kind of event is this?', 'A public registration page for a community-driven Nigerian celebration in Prague, organized by friends and community members with clean records for payments, approvals, and tickets.'],
+  ['What does the contribution cover?', 'Venue, catering, music, production, photography, and the shared costs needed to create the experience.'],
+  ['Can I get a refund if my plans change?', 'No. Contributions are final because funds are committed to event costs as the celebration is prepared.'],
+  ['What should I wear?', 'African Royalty: traditional African clothing, geles, agbadas, lace, vibrant colors, and premium cultural fashion.']
 ];
 
 export default function EventPage() {
@@ -29,55 +12,81 @@ export default function EventPage() {
     <main>
       <header className="header">
         <nav className="container nav">
-          <a className="logo" href="/">OWANBE IN EUROPE</a>
-          <a className="button primary" href="/checkout?event=naija-to-prague-2026">Get Access</a>
+          <a className="logo" href="/">Owanbe in Europe</a>
+          <div className="nav-links">
+            <a href="/#tickets">Tickets</a>
+            <a href="/my-ticket">Find My Ticket</a>
+            <a href={eventDetails.instagramUrl}>Instagram</a>
+          </div>
+          <a className="button primary compact" href="/checkout">Get Access</a>
         </nav>
       </header>
 
-      <section className="hero">
-        <div className="container grid two" style={{ alignItems: 'center' }}>
+      <section className="hero event-hero">
+        <div className="container grid two hero-grid">
           <div>
-            <p className="badge">Naija to Prague</p>
+            <p className="badge">{eventDetails.shortTitle}</p>
             <h1 className="title">Owanbe in Europe</h1>
-            <p className="subtitle">Get ready to vibe with Naija beats and flavors as we bring the ultimate Owanbe party to Prague.</p>
+            <p className="subtitle">Get ready to vibe with Naija beats and flavors as we bring the ultimate Owanbe party to Prague: music, dancing, great food, fashion, culture, and pure celebration energy.</p>
             <div className="actions">
-              <a className="button primary" href="/checkout?event=naija-to-prague-2026">Contribute & Reserve</a>
-              <a className="button secondary" href="https://www.instagram.com/owanbeineurope">Instagram</a>
+              <a className="button primary" href="/checkout">Contribute & Reserve</a>
+              <a className="button secondary" href={eventDetails.instagramUrl}>Instagram</a>
             </div>
           </div>
-          <div className="card">
+          <aside className="card event-panel">
             <p className="kicker">Gathering Details</p>
-            <h2>Saturday, August 15, 2026</h2>
-            <p className="muted">Red Carpet & Photography: 2:00 PM</p>
-            <p className="muted">Main Celebration: 3:00 PM - 8:00 PM CEST</p>
-            <p className="muted">Highlight Event Centre Hlubocepy, Prague, Czech Republic</p>
-            <p className="muted"><strong>Dress Code:</strong> African Royalty</p>
+            <h2>{eventDetails.dateLabel}</h2>
+            <p className="muted">{eventDetails.redCarpetLabel}</p>
+            <p className="muted">{eventDetails.mainTimeLabel}</p>
+            <p className="muted">{eventDetails.venueName}</p>
+            <p className="muted">{eventDetails.venueAddress}</p>
+            <p className="muted"><strong>Dress Code:</strong> {eventDetails.dressCode}</p>
+          </aside>
+        </div>
+      </section>
+
+      <section className="section pattern-section">
+        <div className="container grid two">
+          <div>
+            <p className="kicker">The mood</p>
+            <h2 className="section-title">Premium, cultural, festive, and proudly Nigerian.</h2>
           </div>
+          <p className="muted">This gathering brings friends, community members, and culture lovers together for an unforgettable Prague celebration. The platform keeps the records professional while the event keeps the energy warm, stylish, and deeply Owanbe.</p>
         </div>
       </section>
 
       <section className="section">
-        <div className="container grid two">
-          <div>
-            <p className="kicker">Private Community Gathering</p>
-            <h2>Good vibes, great people, and true Owanbe energy.</h2>
+        <div className="container">
+          <div className="section-head">
+            <div>
+              <p className="kicker">Contribution Tiers</p>
+              <h2 className="section-title">One order, one ticket per attendee.</h2>
+            </div>
+            <a className="button green" href="/checkout">Reserve Now</a>
           </div>
-          <p className="muted">This is not a commercial event. It is a private, community gathering of friends coming together for an unforgettable celebration. Expect non-stop music, energetic dancing, Naija flavors, and pure fun as we blend cultures and create amazing memories in Prague.</p>
+          <div className="grid four">
+            {ticketOptions.map((ticket) => (
+              <article className="card ticket-card" key={ticket.id}>
+                <h3>{ticket.name}</h3>
+                <div className="price">{ticket.price.toLocaleString('cs-CZ')} CZK</div>
+                <p className="muted">{ticket.description}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="section" style={{ background: '#0d0a06' }}>
-        <div className="container">
-          <p className="kicker">Contribution Tiers</p>
-          <h2>Choose your access</h2>
-          <div className="grid four" style={{ marginTop: 24 }}>
-            {tickets.map((ticket) => (
-              <div className="card" key={ticket.name}>
-                <h3>{ticket.name}</h3>
-                <div className="price">{ticket.price}</div>
-                <p className="muted">Community contribution toward venue, food, music, and production.</p>
-              </div>
-            ))}
+      <section className="section ivory-band">
+        <div className="container grid two">
+          <div className="mini-flyer">
+            <span>Official flyer slot</span>
+            <strong>Naija to Prague</strong>
+            <small>Use public/hero-flyer.jpeg when ready</small>
+          </div>
+          <div>
+            <p className="kicker">Policy</p>
+            <h2 className="section-title">Clear records, clear expectations.</h2>
+            <p className="muted dark">Each reservation creates a pending order. Payment is confirmed manually by finance, then one ticket is issued per attendee. Payments are final and non-refundable because funds support venue, catering, music, and production commitments.</p>
           </div>
         </div>
       </section>
@@ -85,33 +94,23 @@ export default function EventPage() {
       <section className="section">
         <div className="container">
           <p className="kicker">FAQ</p>
-          <div className="grid two" style={{ marginTop: 24 }}>
-            {faqs.map((item) => (
-              <div className="card" key={item.q}>
-                <h3>{item.q}</h3>
-                <p className="muted">{item.a}</p>
-              </div>
+          <div className="grid two">
+            {faqs.map(([q, a]) => (
+              <article className="card" key={q}>
+                <h3>{q}</h3>
+                <p className="muted">{a}</p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="section" style={{ background: '#0d0a06' }}>
-        <div className="container grid two">
-          <div className="card">
-            <p className="kicker">Contribution Policy</p>
-            <p className="muted">All funds collected are personal contributions from attendees to make this gathering happen collectively. Because these funds are used to book the venue, catering, and production, contributions are strictly non-refundable.</p>
-          </div>
-          <div className="card">
-            <p className="kicker">Connect With Us</p>
-            <p className="muted">Instagram: @owanbeineurope</p>
-            <p className="muted">Email: info@owanbeineurope.cz</p>
-          </div>
-        </div>
-      </section>
-
       <footer className="footer">
-        <div className="container">Owanbe in Europe - Premium Nigerian community experiences across Europe.</div>
+        <div className="container footer-grid">
+          <span>Owanbe in Europe</span>
+          <a href={`mailto:${eventDetails.email}`}>{eventDetails.email}</a>
+          <a href={eventDetails.instagramUrl}>Instagram</a>
+        </div>
       </footer>
     </main>
   );

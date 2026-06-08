@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { OrganizerGate } from '@/app/components/OrganizerGate';
 
 type FinanceOrder = {
   id: string;
@@ -54,34 +55,36 @@ export default function FinancePage() {
           <a className="button secondary compact" href="/checkin">Check-in</a>
         </nav>
       </header>
-      <section className="section">
-        <div className="container">
-          <p className="kicker">Finance v1</p>
-          <h1 className="section-title">Pending payment approvals.</h1>
-          {message && <div className="result-box">{message}</div>}
-          <div className="grid two">
-            {orders.map((order) => (
-              <article className="card" key={order.id}>
-                <p className="kicker">{order.order_number}</p>
-                <h3>{order.full_name}</h3>
-                <p className="muted">Buyer Email: {order.email}</p>
-                {order.phone && <p className="muted">Phone: {order.phone}</p>}
-                <p className="price">{order.total_amount.toLocaleString('cs-CZ')} CZK</p>
-                <p className="muted">Assigned Handler: {order.payment_account_label}</p>
-                <p className="muted">Variable Symbol: {order.variable_symbol}</p>
-                <p className="muted">Status: {order.payment_status}</p>
-                <p className="muted">Created At: {new Date(order.created_at).toLocaleString()}</p>
-                <div className="attendee-list">
-                  {order.order_attendees?.map((attendee) => (
-                    <p key={`${order.id}-${attendee.attendee_email}`}>{attendee.attendee_name} - {attendee.attendee_email}</p>
-                  ))}
-                </div>
-                <button className="button green submit-button" type="button" onClick={() => approve(order.id)}>Approve Payment</button>
-              </article>
-            ))}
+      <OrganizerGate area="finance">
+        <section className="section">
+          <div className="container">
+            <p className="kicker">Finance v1</p>
+            <h1 className="section-title">Pending payment approvals.</h1>
+            {message && <div className="result-box">{message}</div>}
+            <div className="grid two">
+              {orders.map((order) => (
+                <article className="card" key={order.id}>
+                  <p className="kicker">{order.order_number}</p>
+                  <h3>{order.full_name}</h3>
+                  <p className="muted">Buyer Email: {order.email}</p>
+                  {order.phone && <p className="muted">Phone: {order.phone}</p>}
+                  <p className="price">{order.total_amount.toLocaleString('cs-CZ')} CZK</p>
+                  <p className="muted">Assigned Handler: {order.payment_account_label}</p>
+                  <p className="muted">Variable Symbol: {order.variable_symbol}</p>
+                  <p className="muted">Status: {order.payment_status}</p>
+                  <p className="muted">Created At: {new Date(order.created_at).toLocaleString()}</p>
+                  <div className="attendee-list">
+                    {order.order_attendees?.map((attendee) => (
+                      <p key={`${order.id}-${attendee.attendee_email}`}>{attendee.attendee_name} - {attendee.attendee_email}</p>
+                    ))}
+                  </div>
+                  <button className="button green submit-button" type="button" onClick={() => approve(order.id)}>Approve Payment</button>
+                </article>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </OrganizerGate>
     </main>
   );
 }

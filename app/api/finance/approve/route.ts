@@ -2,8 +2,12 @@ import { NextResponse } from 'next/server';
 import QRCode from 'qrcode';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { makeTicketCode } from '@/lib/orderUtils';
+import { requireOrganizerRole } from '@/lib/organizerAuth';
 
 export async function POST(request: Request) {
+  const auth = await requireOrganizerRole(['finance']);
+  if (!auth.authorized) return auth.response;
+
   const payload = await request.json() as { orderId?: string; approvedBy?: string };
 
   if (!payload.orderId) {
@@ -88,7 +92,7 @@ export async function POST(request: Request) {
     .from('orders')
     .update({
       payment_status: 'paid',
-      approved_by: payload.approvedBy?.trim() || 'finance',
+      approved_by: auth.organizer.email,
       approved_at: new Date().toISOString()
     })
     .eq('id', order.id);

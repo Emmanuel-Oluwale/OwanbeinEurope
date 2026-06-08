@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { normalizeTicketCode } from '@/lib/orderUtils';
+import { requireOrganizerRole } from '@/lib/organizerAuth';
 
 export async function POST(request: Request) {
+  const auth = await requireOrganizerRole(['checkin']);
+  if (!auth.authorized) return auth.response;
+
   const payload = await request.json() as { ticketCode?: string; checkedInBy?: string };
   const ticketCode = normalizeTicketCode(payload.ticketCode || '');
 
@@ -36,7 +40,7 @@ export async function POST(request: Request) {
 
   const { error: checkinError } = await supabase.from('checkins').insert({
     ticket_id: ticket.id,
-    checked_in_by: payload.checkedInBy?.trim() || 'checkin',
+    checked_in_by: auth.organizer.email,
     checked_in_at: new Date().toISOString()
   });
 

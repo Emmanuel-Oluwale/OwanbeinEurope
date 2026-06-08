@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { normalizeTicketCode } from '@/lib/orderUtils';
+import { requireOrganizerRole } from '@/lib/organizerAuth';
 
 export async function POST(request: Request) {
+  const auth = await requireOrganizerRole(['checkin']);
+  if (!auth.authorized) return auth.response;
+
   const payload = await request.json() as { ticketCode?: string };
   const ticketCode = normalizeTicketCode(payload.ticketCode || '');
 

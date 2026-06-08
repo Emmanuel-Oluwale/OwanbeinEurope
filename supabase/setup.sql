@@ -93,6 +93,14 @@ create table if not exists event_media (
   active boolean not null default true
 );
 
+create table if not exists user_role (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  email text not null,
+  role text not null check (role in ('admin', 'finance', 'checkin', 'marketing')),
+  unique (email, role)
+);
+
 create table if not exists user_roles (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
+import { requireOrganizerRole } from '@/lib/organizerAuth';
 
 export async function GET() {
+  const auth = await requireOrganizerRole(['finance']);
+  if (!auth.authorized) return auth.response;
+
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('orders')

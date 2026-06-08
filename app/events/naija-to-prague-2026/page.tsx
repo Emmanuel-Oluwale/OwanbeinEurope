@@ -1,4 +1,5 @@
-import { eventDetails, ticketOptions } from '@/lib/eventData';
+import { TicketGrid } from '@/app/components/TicketGrid';
+import { eventDetails } from '@/lib/eventData';
 
 const faqs = [
   ['What kind of event is this?', 'A public registration page for a community-driven Nigerian celebration in Prague, organized by friends and community members with clean records for payments, approvals, and tickets.'],
@@ -64,15 +65,7 @@ export default function EventPage() {
             </div>
             <a className="button green" href="/checkout">Reserve Now</a>
           </div>
-          <div className="grid four">
-            {ticketOptions.map((ticket) => (
-              <article className="card ticket-card" key={ticket.id}>
-                <h3>{ticket.name}</h3>
-                <div className="price">{ticket.price.toLocaleString('cs-CZ')} CZK</div>
-                <p className="muted">{ticket.description}</p>
-              </article>
-            ))}
-          </div>
+          <TicketGrid />
         </div>
       </section>
 

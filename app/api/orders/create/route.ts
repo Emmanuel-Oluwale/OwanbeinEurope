@@ -71,7 +71,37 @@ export async function POST(request: Request) {
 
     const remaining = Number(ticketTypeRow.quantity_available || 0) - Number(ticketTypeRow.quantity_sold || 0);
     if (remaining < quantity) {
-      return NextResponse.json({ error: 'Not enough tickets remain for this tier.' }, { status: 409 });
+      return NextResponse.json({ error: `Only ${Math.max(remaining, 0)} tickets remaining for this tier.` }, { status: 409 });
+    }
+
+    const duplicateWindow = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { data: recentOrders, error: duplicateError } = await supabase
+      .from('orders')
+      .select('id, order_number, variable_symbol, total_amount, payment_status, order_attendees(id, ticket_type_id)')
+      .eq('event_id', eventRow.id)
+      .eq('email', buyerEmail)
+      .eq('payment_status', 'pending')
+      .gte('created_at', duplicateWindow)
+      .order('created_at', { ascending: false });
+
+    if (duplicateError) {
+      return NextResponse.json({ error: 'Could not check for duplicate pending orders.' }, { status: 500 });
+    }
+
+    const matchingPendingOrder = recentOrders?.find((order) => {
+      const orderAttendees = order.order_attendees || [];
+      return orderAttendees.length === quantity && orderAttendees.every((attendee) => attendee.ticket_type_id === ticketTypeRow.id);
+    });
+
+    if (matchingPendingOrder) {
+      return NextResponse.json({
+        existingOrder: true,
+        orderNumber: matchingPendingOrder.order_number,
+        variableSymbol: matchingPendingOrder.variable_symbol,
+        amountCzk: matchingPendingOrder.total_amount,
+        paymentStatus: 'pending',
+        message: 'A matching pending order already exists.'
+      });
     }
 
     const { count, error: countError } = await supabase
@@ -133,6 +163,7 @@ export async function POST(request: Request) {
       paymentStatus: 'pending',
       accountName: paymentAccount.name,
       iban: paymentAccount.iban,
+      bic: paymentAccount.bic,
       paymentQrCode,
       paymentAccountPlaceholder: paymentAccount.isPlaceholder,
       instructions: paymentAccount.isPlaceholder

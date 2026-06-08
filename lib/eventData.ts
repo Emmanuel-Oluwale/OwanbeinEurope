@@ -21,25 +21,29 @@ export const ticketOptions = [
     id: 'early-bird',
     name: 'Early Bird',
     price: 1000,
-    description: 'First wave community access for early supporters.'
+    description: 'First wave community access for early supporters.',
+    quantityAvailable: 20
   },
   {
     id: 'regular',
     name: 'Regular',
     price: 1200,
-    description: 'Standard access to the full Naija to Prague celebration.'
+    description: 'Standard access to the full Naija to Prague celebration.',
+    quantityAvailable: 100
   },
   {
     id: 'late-registration',
     name: 'Late Registration',
     price: 1500,
-    description: 'Final access tier when early spots are gone.'
+    description: 'Final access tier when early spots are gone.',
+    quantityAvailable: 30
   },
   {
     id: 'vip',
     name: 'VIP',
     price: 2500,
-    description: 'Premium access for guests who want the top-tier Owanbe feel.'
+    description: 'Premium access for guests who want the top-tier Owanbe feel.',
+    quantityAvailable: 10
   }
 ];
 

@@ -1,4 +1,5 @@
-import { eventDetails, ticketOptions } from '@/lib/eventData';
+import { TicketGrid } from '@/app/components/TicketGrid';
+import { eventDetails } from '@/lib/eventData';
 
 const experiences = [
   ['Naija Beats', 'Afrobeats, amapiano, classics, and party anthems built for a real dance floor.'],
@@ -96,15 +97,7 @@ export default function HomePage() {
             </div>
             <a className="button green" href="/checkout">Start Checkout</a>
           </div>
-          <div className="grid four">
-            {ticketOptions.map((ticket) => (
-              <article className="card ticket-card" key={ticket.id}>
-                <h3>{ticket.name}</h3>
-                <div className="price">{ticket.price.toLocaleString('cs-CZ')} CZK</div>
-                <p className="muted">{ticket.description}</p>
-              </article>
-            ))}
-          </div>
+          <TicketGrid />
         </div>
       </section>
 

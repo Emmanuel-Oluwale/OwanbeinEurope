@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { ticketOptions } from '@/lib/eventData';
+import type { PublicTicket } from '@/lib/tickets';
 
 type Attendee = {
   fullName: string;
@@ -16,19 +17,43 @@ type OrderResult = {
   amountCzk?: number;
   accountName?: string;
   iban?: string;
+  bic?: string;
   paymentQrCode?: string | null;
   paymentAccountPlaceholder?: boolean;
   paymentStatus?: string;
   instructions?: string;
+  existingOrder?: boolean;
+  message?: string;
 };
 
-const blankAttendee = (): Attendee => ({ fullName: '', email: '', phone: '' });
 const MIN_QUANTITY = 1;
 const MAX_QUANTITY = 10;
+const blankAttendee = (): Attendee => ({ fullName: '', email: '', phone: '' });
 
-function clampQuantity(value: number) {
+function fallbackTickets(): PublicTicket[] {
+  return ticketOptions.map((ticket) => ({
+    id: ticket.id,
+    name: ticket.name,
+    description: ticket.description,
+    priceCzk: ticket.price,
+    quantityAvailable: ticket.quantityAvailable,
+    quantitySold: 0,
+    remaining: ticket.quantityAvailable,
+    saleEnd: null,
+    showOnSite: true,
+    visible: true,
+    soldOut: false
+  }));
+}
+
+function clampQuantity(value: number, maxQuantity: number) {
   if (!Number.isFinite(value)) return MIN_QUANTITY;
-  return Math.max(MIN_QUANTITY, Math.min(MAX_QUANTITY, Math.floor(value)));
+  return Math.max(MIN_QUANTITY, Math.min(maxQuantity, Math.floor(value)));
+}
+
+function formatSaleEnd(value: string | null) {
+  if (!value) return 'To be announced';
+  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(value));
 }
 
 export default function CheckoutPage() {
@@ -39,12 +64,31 @@ export default function CheckoutPage() {
   const [buyerEmail, setBuyerEmail] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
   const [attendees, setAttendees] = useState<Attendee[]>([blankAttendee()]);
+  const [tickets, setTickets] = useState<PublicTicket[]>(fallbackTickets());
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<OrderResult | null>(null);
   const orderCreated = Boolean(result?.orderNumber && !result.error);
 
-  const selected = ticketOptions.find((item) => item.id === ticketType) || ticketOptions[0];
-  const total = selected.price * quantity;
+  const selected = tickets.find((item) => item.id === ticketType) || tickets.find((item) => !item.soldOut) || tickets[0];
+  const selectedPrice = selected.priceCzk;
+  const maxQuantity = Math.max(MIN_QUANTITY, Math.min(MAX_QUANTITY, selected.remaining || MAX_QUANTITY));
+  const total = selectedPrice * quantity;
+
+  useEffect(() => {
+    async function loadTickets() {
+      const response = await fetch('/api/events/naija-to-prague-2026/tickets');
+      const data = await response.json();
+      const nextTickets: PublicTicket[] = data.tickets?.length ? data.tickets : fallbackTickets();
+      const firstAvailable = nextTickets.find((ticket) => !ticket.soldOut);
+      setTickets(nextTickets);
+
+      if (!nextTickets.some((ticket) => ticket.id === ticketType && !ticket.soldOut) && firstAvailable) {
+        setTicketType(firstAvailable.id);
+      }
+    }
+
+    loadTickets();
+  }, []);
 
   useEffect(() => {
     setAttendees((current) => {
@@ -58,15 +102,10 @@ export default function CheckoutPage() {
     return !orderCreated && buyerFullName.trim() && buyerEmail.trim() && quantity >= MIN_QUANTITY && attendees.every((attendee) => attendee.fullName.trim() && attendee.email.trim());
   }, [attendees, buyerEmail, buyerFullName, orderCreated, quantity]);
 
-  function startNewOrder() {
-    setResult(null);
-    setTicketType('early-bird');
-    setQuantity(1);
-    setQuantityInput('1');
-    setBuyerFullName('');
-    setBuyerEmail('');
-    setBuyerPhone('');
-    setAttendees([blankAttendee()]);
+  function setQuantityState(value: number) {
+    const nextQuantity = clampQuantity(value, maxQuantity);
+    setQuantity(nextQuantity);
+    setQuantityInput(String(nextQuantity));
   }
 
   function setTypedQuantity(value: string) {
@@ -78,7 +117,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    const nextQuantity = clampQuantity(Number(digitsOnly));
+    const nextQuantity = clampQuantity(Number(digitsOnly), maxQuantity);
     setQuantity(nextQuantity);
 
     if (String(nextQuantity) !== digitsOnly) {
@@ -87,14 +126,19 @@ export default function CheckoutPage() {
   }
 
   function commitQuantity() {
-    const nextQuantity = clampQuantity(Number(quantityInput || MIN_QUANTITY));
-    setQuantity(nextQuantity);
-    setQuantityInput(String(nextQuantity));
+    setQuantityState(Number(quantityInput || MIN_QUANTITY));
   }
 
   function adjustQuantity(delta: number) {
     if (orderCreated) return;
-    const nextQuantity = clampQuantity(quantity + delta);
+    setQuantityState(quantity + delta);
+  }
+
+  function selectTicket(ticket: PublicTicket) {
+    if (orderCreated || ticket.soldOut) return;
+    setTicketType(ticket.id);
+    const nextMax = Math.max(MIN_QUANTITY, Math.min(MAX_QUANTITY, ticket.remaining || MAX_QUANTITY));
+    const nextQuantity = clampQuantity(quantity, nextMax);
     setQuantity(nextQuantity);
     setQuantityInput(String(nextQuantity));
   }
@@ -102,6 +146,18 @@ export default function CheckoutPage() {
   function updateAttendee(index: number, field: keyof Attendee, value: string) {
     if (orderCreated) return;
     setAttendees((current) => current.map((attendee, attendeeIndex) => attendeeIndex === index ? { ...attendee, [field]: value } : attendee));
+  }
+
+  function startNewOrder() {
+    setResult(null);
+    const firstAvailable = tickets.find((ticket) => !ticket.soldOut);
+    setTicketType(firstAvailable?.id || 'early-bird');
+    setQuantity(1);
+    setQuantityInput('1');
+    setBuyerFullName('');
+    setBuyerEmail('');
+    setBuyerPhone('');
+    setAttendees([blankAttendee()]);
   }
 
   async function submitOrder(event: React.FormEvent<HTMLFormElement>) {
@@ -159,7 +215,7 @@ export default function CheckoutPage() {
             <div className="summary-panel">
               <p className="kicker">Order Summary</p>
               <h2>{selected.name}</h2>
-              <p>{quantity} x {selected.price.toLocaleString('cs-CZ')} CZK</p>
+              <p>{quantity} x {selectedPrice.toLocaleString('cs-CZ')} CZK</p>
               <div className="price">{total.toLocaleString('cs-CZ')} CZK</div>
               {orderCreated && <p className="success-text">Order created. This checkout is now locked to prevent duplicate orders.</p>}
             </div>
@@ -170,15 +226,18 @@ export default function CheckoutPage() {
               <section className="form-section">
                 <p className="kicker">Ticket Tier</p>
                 <div className="ticket-picker">
-                  {ticketOptions.map((ticket) => (
+                  {tickets.map((ticket) => (
                     <button
                       className={`ticket-choice ${ticket.id === ticketType ? 'selected' : ''}`}
+                      disabled={ticket.soldOut}
                       key={ticket.id}
-                      onClick={() => setTicketType(ticket.id)}
+                      onClick={() => selectTicket(ticket)}
                       type="button"
                     >
                       <span>{ticket.name}</span>
-                      <strong>{ticket.price.toLocaleString('cs-CZ')} CZK</strong>
+                      <strong>{ticket.priceCzk.toLocaleString('cs-CZ')} CZK</strong>
+                      <small>{ticket.soldOut ? 'Sold Out' : `${ticket.remaining} / ${ticket.quantityAvailable} remaining`}</small>
+                      <small>Sales end: {formatSaleEnd(ticket.saleEnd)}</small>
                     </button>
                   ))}
                 </div>
@@ -189,6 +248,8 @@ export default function CheckoutPage() {
                     id="ticket-quantity"
                     className="field quantity-field"
                     inputMode="numeric"
+                    max={maxQuantity}
+                    min={MIN_QUANTITY}
                     pattern="[0-9]*"
                     value={quantityInput}
                     onBlur={commitQuantity}
@@ -197,7 +258,7 @@ export default function CheckoutPage() {
                   />
                   <button className="quantity-button" type="button" onClick={() => adjustQuantity(1)} aria-label="Increase ticket quantity">+</button>
                 </div>
-                <p className="small">You can type any number from {MIN_QUANTITY} to {MAX_QUANTITY}. Attendee fields update automatically.</p>
+                <p className="small">You can type any number from {MIN_QUANTITY} to {maxQuantity}. Attendee fields update automatically.</p>
               </section>
 
               <section className="form-section">
@@ -236,12 +297,17 @@ export default function CheckoutPage() {
                   <p>{result.error}</p>
                 ) : (
                   <>
-                    <p className="kicker">Order Created</p>
+                    <p className="kicker">{result.existingOrder ? 'Existing Pending Order' : 'Order Created'}</p>
                     <h3>{result.orderNumber}</h3>
-                    <p>Amount: {result.amountCzk?.toLocaleString('cs-CZ')} CZK</p>
-                    <p>Variable symbol: <strong>{result.variableSymbol}</strong></p>
-                    <p>Account holder: {result.accountName}</p>
-                    <p>IBAN: {result.iban}</p>
+                    {result.message && <p>{result.message}</p>}
+                    <div className="payment-details">
+                      <p><span>Recipient</span><strong>{result.accountName || 'Assigned after payment setup'}</strong></p>
+                      <p><span>IBAN</span><strong>{result.iban || 'Available on your order'}</strong></p>
+                      <p><span>BIC</span><strong>{result.bic || 'Available on your order'}</strong></p>
+                      <p><span>Variable Symbol</span><strong>{result.variableSymbol}</strong></p>
+                      <p><span>Order</span><strong>{result.orderNumber}</strong></p>
+                      <p><span>Amount</span><strong>{result.amountCzk?.toLocaleString('cs-CZ')} CZK</strong></p>
+                    </div>
                     {result.paymentQrCode && <img className="ticket-qr" src={result.paymentQrCode} alt="Bank transfer QR payment code" />}
                     {result.paymentAccountPlaceholder && <p className="warning-text">Payment details are placeholders until the real Vercel payment variables are added.</p>}
                     <p>{result.instructions}</p>

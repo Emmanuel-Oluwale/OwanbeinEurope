@@ -10,6 +10,7 @@ type FinanceOrder = {
   email: string;
   phone: string | null;
   total_amount: number;
+  payment_status: string;
   variable_symbol: string;
   payment_account_label: string;
   order_attendees?: Array<{
@@ -63,10 +64,13 @@ export default function FinancePage() {
               <article className="card" key={order.id}>
                 <p className="kicker">{order.order_number}</p>
                 <h3>{order.full_name}</h3>
-                <p className="muted">{order.email} {order.phone ? `- ${order.phone}` : ''}</p>
+                <p className="muted">Buyer Email: {order.email}</p>
+                {order.phone && <p className="muted">Phone: {order.phone}</p>}
                 <p className="price">{order.total_amount.toLocaleString('cs-CZ')} CZK</p>
-                <p className="muted">VS: {order.variable_symbol}</p>
-                <p className="muted">Account: {order.payment_account_label}</p>
+                <p className="muted">Assigned Handler: {order.payment_account_label}</p>
+                <p className="muted">Variable Symbol: {order.variable_symbol}</p>
+                <p className="muted">Status: {order.payment_status}</p>
+                <p className="muted">Created At: {new Date(order.created_at).toLocaleString()}</p>
                 <div className="attendee-list">
                   {order.order_attendees?.map((attendee) => (
                     <p key={`${order.id}-${attendee.attendee_email}`}>{attendee.attendee_name} - {attendee.attendee_email}</p>

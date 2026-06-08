@@ -2,8 +2,11 @@ export type PaymentAccount = {
   label: string;
   name: string;
   iban: string;
+  bic: string;
   isPlaceholder: boolean;
 };
+
+const paymentHandlers = ['Lola', 'Oyin', 'Stephen', 'Akin'];
 
 export function sanitizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -30,12 +33,15 @@ export function pickPaymentAccount(orderCount: number): PaymentAccount {
   const index = (orderCount % 4) + 1;
   const iban = process.env[`PAYMENT_ACCOUNT_${index}_IBAN`];
   const name = process.env[`PAYMENT_ACCOUNT_${index}_NAME`];
+  const bic = process.env[`PAYMENT_ACCOUNT_${index}_BIC`];
+  const label = paymentHandlers[index - 1];
 
   return {
-    label: `account_${index}`,
-    name: name || `Payment Account ${index}`,
+    label,
+    name: name || label,
     iban: iban || `PLACEHOLDER-IBAN-${index}`,
-    isPlaceholder: !iban || !name
+    bic: bic || `PLACEHOLDER-BIC-${index}`,
+    isPlaceholder: !iban || !name || !bic
   };
 }
 
@@ -45,8 +51,10 @@ export function buildQrPlatbaPayload(account: PaymentAccount, amountCzk: number,
   }
 
   const iban = account.iban.replace(/\s+/g, '');
+  const bic = account.bic.replace(/\s+/g, '');
+  const recipient = encodeQrField(account.name);
   const message = encodeQrField(`Owanbe ${orderNumber}`);
-  return `SPD*1.0*ACC:${iban}*AM:${amountCzk.toFixed(2)}*CC:CZK*X-VS:${variableSymbol}*MSG:${message}`;
+  return `SPD*1.0*ACC:${iban}+${bic}*AM:${amountCzk.toFixed(2)}*CC:CZK*X-VS:${variableSymbol}*RN:${recipient}*MSG:${message}`;
 }
 
 function encodeQrField(value: string) {

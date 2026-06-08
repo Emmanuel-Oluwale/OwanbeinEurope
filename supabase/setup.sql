@@ -26,9 +26,13 @@ create table if not exists ticket_types (
   quantity_sold bigint not null default 0,
   sale_start timestamptz,
   sale_end timestamptz,
+  show_on_site boolean not null default true,
   active boolean not null default true,
   unique (event_id, name)
 );
+
+alter table ticket_types
+add column if not exists show_on_site boolean not null default true;
 
 create table if not exists orders (
   id uuid primary key default gen_random_uuid(),
@@ -165,4 +169,15 @@ where events.slug = 'naija-to-prague-2026'
 on conflict (event_id, name) do update set
   description = excluded.description,
   price_czk = excluded.price_czk,
-  active = true;
+  active = true,
+  show_on_site = true;
+
+update ticket_types
+set quantity_available = case name
+  when 'Early Bird' then 20
+  when 'Regular' then 100
+  when 'Late Registration' then 30
+  when 'VIP' then 10
+  else quantity_available
+end
+where event_id = (select id from events where slug = 'naija-to-prague-2026');

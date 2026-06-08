@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import QRCode from 'qrcode';
 import { eventSlug, getTicketOption } from '@/lib/eventData';
+import { paymentInstructionsHtml, sendBrevoEmail } from '@/lib/brevo';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { buildOrderNumber, buildQrPlatbaPayload, buildSequence, buildVariableSymbol, pickPaymentAccount, sanitizeEmail } from '@/lib/orderUtils';
 
@@ -154,6 +155,27 @@ export async function POST(request: Request) {
 
     if (attendeeError) {
       return NextResponse.json({ error: 'Order was created, but attendee records could not be saved. Add the order_attendees table from README.' }, { status: 500 });
+    }
+
+    try {
+      await sendBrevoEmail({
+        to: buyerEmail,
+        toName: buyerName,
+        subject: `Payment instructions for ${orderNumber}`,
+        emailType: 'payment_instructions',
+        orderId: order.id,
+        html: paymentInstructionsHtml({
+          name: buyerName,
+          orderNumber,
+          amountCzk,
+          variableSymbol,
+          accountName: paymentAccount.name,
+          iban: paymentAccount.iban,
+          bic: paymentAccount.bic
+        })
+      });
+    } catch (emailError) {
+      console.error('Payment instruction email failed', emailError);
     }
 
     return NextResponse.json({

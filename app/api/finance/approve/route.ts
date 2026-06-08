@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import QRCode from 'qrcode';
+import { sendBrevoEmail, ticketReadyHtml } from '@/lib/brevo';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { makeTicketCode } from '@/lib/orderUtils';
 import { requireOrganizerRole } from '@/lib/organizerAuth';
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
   const supabase = getSupabaseAdmin();
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('id, order_number, payment_status, order_attendees(id, ticket_type_id, attendee_name, attendee_email, ticket_id)')
+    .select('id, order_number, full_name, email, payment_status, order_attendees(id, ticket_type_id, attendee_name, attendee_email, ticket_id)')
     .eq('id', payload.orderId)
     .single();
 
@@ -113,6 +114,23 @@ export async function POST(request: Request) {
 
   if (updateError) {
     return NextResponse.json({ error: 'Tickets were created, but order approval status could not be saved.' }, { status: 500 });
+  }
+
+  try {
+    await sendBrevoEmail({
+      to: order.email,
+      toName: order.full_name,
+      subject: `Your Owanbe in Europe ticket is ready`,
+      emailType: 'ticket_ready',
+      orderId: order.id,
+      html: ticketReadyHtml({
+        name: order.full_name,
+        orderNumber: order.order_number,
+        ticketCodes: tickets.map((ticket) => ticket.ticket_code)
+      })
+    });
+  } catch (emailError) {
+    console.error('Ticket-ready email failed', emailError);
   }
 
   return NextResponse.json({ ok: true, tickets });

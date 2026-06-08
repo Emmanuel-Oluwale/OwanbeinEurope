@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import QRCode from 'qrcode';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { makeTicketCode } from '@/lib/orderUtils';
 
@@ -29,18 +30,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Order has no attendee records.' }, { status: 400 });
   }
 
-  const ticketRows = attendees.map((attendee, index) => {
+  const ticketRows = await Promise.all(attendees.map(async (attendee, index) => {
     const ticketCode = makeTicketCode(order.order_number, index);
+    const checkinUrl = `https://owanbeineurope.cz/checkin?ticket=${encodeURIComponent(ticketCode)}`;
     return {
       order_id: order.id,
       ticket_type_id: attendee.ticket_type_id,
       attendee_name: attendee.attendee_name,
       attendee_email: attendee.attendee_email,
       ticket_code: ticketCode,
-      qr_code: `https://owanbeineurope.cz/checkin?ticket=${encodeURIComponent(ticketCode)}`,
+      qr_code: await QRCode.toDataURL(checkinUrl, { margin: 1, width: 320 }),
       status: 'valid'
     };
-  });
+  }));
 
   const { data: tickets, error: ticketError } = await supabase
     .from('tickets')

@@ -4,7 +4,11 @@ out/
 .vercel/
 .env*
 !.env.example
+!.env.local.example
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+.vercel
+.env*

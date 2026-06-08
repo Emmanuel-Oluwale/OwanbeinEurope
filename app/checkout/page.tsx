@@ -16,6 +16,8 @@ type OrderResult = {
   amountCzk?: number;
   accountName?: string;
   iban?: string;
+  paymentQrCode?: string | null;
+  paymentAccountPlaceholder?: boolean;
   paymentStatus?: string;
   instructions?: string;
 };
@@ -169,6 +171,8 @@ export default function CheckoutPage() {
                     <p>Variable symbol: <strong>{result.variableSymbol}</strong></p>
                     <p>Account holder: {result.accountName}</p>
                     <p>IBAN: {result.iban}</p>
+                    {result.paymentQrCode && <img className="ticket-qr" src={result.paymentQrCode} alt="Bank transfer QR payment code" />}
+                    {result.paymentAccountPlaceholder && <p className="warning-text">Payment details are placeholders until the real Vercel payment variables are added.</p>}
                     <p>{result.instructions}</p>
                   </>
                 )}

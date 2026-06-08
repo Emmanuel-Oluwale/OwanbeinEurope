@@ -16,23 +16,12 @@ Event ticketing platform built with Next.js, Vercel, and Supabase.
 
 Real IBANs and account-holder names must stay in Vercel server-side environment variables only. The frontend receives only the one assigned payment account for the buyer's order. Supabase stores `payment_account_label` such as `account_1`, not the real IBAN.
 
-## Required Supabase Addition
+## Supabase Setup
 
-The checkout stores attendee details before finance approval. Add this table if it does not exist yet:
+Run the SQL file below in Supabase SQL Editor when you are ready:
 
-```sql
-create table if not exists order_attendees (
-  id uuid primary key default gen_random_uuid(),
-  created_at timestamptz not null default now(),
-  order_id uuid not null references orders(id) on delete cascade,
-  ticket_type_id uuid not null references ticket_types(id),
-  attendee_name text not null,
-  attendee_email text not null,
-  attendee_phone text,
-  ticket_id uuid references tickets(id)
-);
-
-create index if not exists order_attendees_order_id_idx on order_attendees(order_id);
+```text
+supabase/setup.sql
 ```
 
 Finance approval creates one `tickets` row per `order_attendees` row, then stores the generated `ticket_id` back on the attendee record.

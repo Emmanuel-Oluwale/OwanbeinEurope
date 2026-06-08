@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+import QRCode from 'qrcode';
 import { eventSlug, getTicketOption } from '@/lib/eventData';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
-import { buildOrderNumber, buildSequence, buildVariableSymbol, pickPaymentAccount, sanitizeEmail } from '@/lib/orderUtils';
+import { buildOrderNumber, buildQrPlatbaPayload, buildSequence, buildVariableSymbol, pickPaymentAccount, sanitizeEmail } from '@/lib/orderUtils';
 
 type CreateOrderPayload = {
   eventSlug?: string;
@@ -88,6 +89,8 @@ export async function POST(request: Request) {
     const variableSymbol = buildVariableSymbol(sequence);
     const paymentAccount = pickPaymentAccount(existingOrderCount);
     const amountCzk = Number(ticketTypeRow.price_czk) * quantity;
+    const qrPlatbaPayload = buildQrPlatbaPayload(paymentAccount, amountCzk, variableSymbol, orderNumber);
+    const paymentQrCode = qrPlatbaPayload ? await QRCode.toDataURL(qrPlatbaPayload, { margin: 1, width: 320 }) : null;
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -130,7 +133,11 @@ export async function POST(request: Request) {
       paymentStatus: 'pending',
       accountName: paymentAccount.name,
       iban: paymentAccount.iban,
-      instructions: `Send ${amountCzk.toLocaleString('cs-CZ')} CZK by bank transfer and include variable symbol ${variableSymbol}. Tickets are issued after finance approval.`
+      paymentQrCode,
+      paymentAccountPlaceholder: paymentAccount.isPlaceholder,
+      instructions: paymentAccount.isPlaceholder
+        ? 'Payment account details are placeholders for now. Replace the Vercel payment env vars before accepting live payments.'
+        : `Send ${amountCzk.toLocaleString('cs-CZ')} CZK by bank transfer and include variable symbol ${variableSymbol}. Tickets are issued after finance approval.`
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not create order.';

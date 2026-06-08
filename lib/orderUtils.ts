@@ -2,6 +2,7 @@ export type PaymentAccount = {
   label: string;
   name: string;
   iban: string;
+  isPlaceholder: boolean;
 };
 
 export function sanitizeEmail(email: string) {
@@ -30,15 +31,26 @@ export function pickPaymentAccount(orderCount: number): PaymentAccount {
   const iban = process.env[`PAYMENT_ACCOUNT_${index}_IBAN`];
   const name = process.env[`PAYMENT_ACCOUNT_${index}_NAME`];
 
-  if (!iban || !name) {
-    throw new Error(`Missing PAYMENT_ACCOUNT_${index}_IBAN or PAYMENT_ACCOUNT_${index}_NAME.`);
-  }
-
   return {
     label: `account_${index}`,
-    name,
-    iban
+    name: name || `Payment Account ${index}`,
+    iban: iban || `PLACEHOLDER-IBAN-${index}`,
+    isPlaceholder: !iban || !name
   };
+}
+
+export function buildQrPlatbaPayload(account: PaymentAccount, amountCzk: number, variableSymbol: string, orderNumber: string) {
+  if (account.isPlaceholder) {
+    return '';
+  }
+
+  const iban = account.iban.replace(/\s+/g, '');
+  const message = encodeQrField(`Owanbe ${orderNumber}`);
+  return `SPD*1.0*ACC:${iban}*AM:${amountCzk.toFixed(2)}*CC:CZK*X-VS:${variableSymbol}*MSG:${message}`;
+}
+
+function encodeQrField(value: string) {
+  return value.replace(/\*/g, ' ').replace(/:/g, ' ').trim();
 }
 
 export function makeTicketCode(orderNumber: string, index: number) {

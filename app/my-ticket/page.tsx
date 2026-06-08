@@ -71,6 +71,7 @@ export default function MyTicketPage() {
                       <div className="attendee-box" key={ticket.ticket_code}>
                         <h3>{ticket.attendee_name}</h3>
                         <p>{ticket.attendee_email}</p>
+                        {ticket.qr_code && <img className="ticket-qr" src={ticket.qr_code} alt={`QR code for ${ticket.attendee_name}`} />}
                         <p><strong>{ticket.ticket_code}</strong></p>
                         <p>Status: {ticket.status}</p>
                       </div>

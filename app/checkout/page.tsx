@@ -23,10 +23,18 @@ type OrderResult = {
 };
 
 const blankAttendee = (): Attendee => ({ fullName: '', email: '', phone: '' });
+const MIN_QUANTITY = 1;
+const MAX_QUANTITY = 10;
+
+function clampQuantity(value: number) {
+  if (!Number.isFinite(value)) return MIN_QUANTITY;
+  return Math.max(MIN_QUANTITY, Math.min(MAX_QUANTITY, Math.floor(value)));
+}
 
 export default function CheckoutPage() {
   const [ticketType, setTicketType] = useState('early-bird');
   const [quantity, setQuantity] = useState(1);
+  const [quantityInput, setQuantityInput] = useState('1');
   const [buyerFullName, setBuyerFullName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
@@ -46,8 +54,36 @@ export default function CheckoutPage() {
   }, [quantity]);
 
   const canSubmit = useMemo(() => {
-    return buyerFullName.trim() && buyerEmail.trim() && attendees.every((attendee) => attendee.fullName.trim() && attendee.email.trim());
-  }, [attendees, buyerEmail, buyerFullName]);
+    return buyerFullName.trim() && buyerEmail.trim() && quantity >= MIN_QUANTITY && attendees.every((attendee) => attendee.fullName.trim() && attendee.email.trim());
+  }, [attendees, buyerEmail, buyerFullName, quantity]);
+
+  function setTypedQuantity(value: string) {
+    const digitsOnly = value.replace(/[^0-9]/g, '');
+    setQuantityInput(digitsOnly);
+
+    if (!digitsOnly) {
+      return;
+    }
+
+    const nextQuantity = clampQuantity(Number(digitsOnly));
+    setQuantity(nextQuantity);
+
+    if (String(nextQuantity) !== digitsOnly) {
+      setQuantityInput(String(nextQuantity));
+    }
+  }
+
+  function commitQuantity() {
+    const nextQuantity = clampQuantity(Number(quantityInput || MIN_QUANTITY));
+    setQuantity(nextQuantity);
+    setQuantityInput(String(nextQuantity));
+  }
+
+  function adjustQuantity(delta: number) {
+    const nextQuantity = clampQuantity(quantity + delta);
+    setQuantity(nextQuantity);
+    setQuantityInput(String(nextQuantity));
+  }
 
   function updateAttendee(index: number, field: keyof Attendee, value: string) {
     setAttendees((current) => current.map((attendee, attendeeIndex) => attendeeIndex === index ? { ...attendee, [field]: value } : attendee));
@@ -55,6 +91,7 @@ export default function CheckoutPage() {
 
   async function submitOrder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    commitQuantity();
     setLoading(true);
     setResult(null);
 
@@ -101,7 +138,7 @@ export default function CheckoutPage() {
           <div>
             <p className="kicker">Checkout</p>
             <h1 className="section-title checkout-title">Reserve your spot.</h1>
-            <p className="muted">One buyer can reserve multiple tickets. Add each attendee below so finance can issue one ticket and QR-ready code per person after payment approval.</p>
+            <p className="muted">One buyer can reserve multiple tickets. Type the number of tickets you want, then add each attendee below so finance can issue one ticket and QR-ready code per person after payment approval.</p>
             <div className="summary-panel">
               <p className="kicker">Order Summary</p>
               <h2>{selected.name}</h2>
@@ -126,8 +163,22 @@ export default function CheckoutPage() {
                   </button>
                 ))}
               </div>
-              <label className="field-label">Quantity</label>
-              <input className="field" type="number" min="1" max="10" value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(10, Number(event.target.value))))} />
+              <label className="field-label" htmlFor="ticket-quantity">Number of tickets</label>
+              <div className="quantity-control">
+                <button className="quantity-button" type="button" onClick={() => adjustQuantity(-1)} aria-label="Reduce ticket quantity">-</button>
+                <input
+                  id="ticket-quantity"
+                  className="field quantity-field"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={quantityInput}
+                  onBlur={commitQuantity}
+                  onChange={(event) => setTypedQuantity(event.target.value)}
+                  placeholder="Type number"
+                />
+                <button className="quantity-button" type="button" onClick={() => adjustQuantity(1)} aria-label="Increase ticket quantity">+</button>
+              </div>
+              <p className="small">You can type any number from {MIN_QUANTITY} to {MAX_QUANTITY}. Attendee fields update automatically.</p>
             </section>
 
             <section className="form-section">

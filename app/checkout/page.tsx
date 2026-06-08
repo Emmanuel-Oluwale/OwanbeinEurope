@@ -51,11 +51,6 @@ function clampQuantity(value: number, maxQuantity: number) {
   return Math.max(MIN_QUANTITY, Math.min(maxQuantity, Math.floor(value)));
 }
 
-function formatSaleEnd(value: string | null) {
-  if (!value) return 'To be announced';
-  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(value));
-}
-
 export default function CheckoutPage() {
   const [ticketType, setTicketType] = useState('early-bird');
   const [quantity, setQuantity] = useState(1);
@@ -236,8 +231,7 @@ export default function CheckoutPage() {
                     >
                       <span>{ticket.name}</span>
                       <strong>{ticket.priceCzk.toLocaleString('cs-CZ')} CZK</strong>
-                      <small>{ticket.soldOut ? 'Sold Out' : `${ticket.remaining} / ${ticket.quantityAvailable} remaining`}</small>
-                      <small>Sales end: {formatSaleEnd(ticket.saleEnd)}</small>
+                      <small>{ticket.soldOut ? 'Sold Out' : 'Available now'}</small>
                     </button>
                   ))}
                 </div>
@@ -258,7 +252,7 @@ export default function CheckoutPage() {
                   />
                   <button className="quantity-button" type="button" onClick={() => adjustQuantity(1)} aria-label="Increase ticket quantity">+</button>
                 </div>
-                <p className="small">You can type any number from {MIN_QUANTITY} to {maxQuantity}. Attendee fields update automatically.</p>
+                <p className="small">You can select up to {MAX_QUANTITY} tickets per order. Attendee fields update automatically.</p>
               </section>
 
               <section className="form-section">

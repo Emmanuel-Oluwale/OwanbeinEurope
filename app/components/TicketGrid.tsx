@@ -42,16 +42,10 @@ export function TicketGrid() {
           <h3>{ticket.name}</h3>
           <div className="price">{ticket.priceCzk.toLocaleString('cs-CZ')} CZK</div>
           <p className="muted">{ticket.description}</p>
-          <p className="muted">{ticket.soldOut ? 'Sold Out' : `${ticket.remaining} / ${ticket.quantityAvailable} remaining`}</p>
-          <p className="muted">Sales end: {formatSaleEnd(ticket.saleEnd)}</p>
+          <p className="muted ticket-status">{ticket.soldOut ? 'Sold Out' : 'Available now'}</p>
           {!ticket.soldOut && <a className="button secondary submit-button" href="/checkout">Reserve Spot</a>}
         </article>
       ))}
     </div>
   );
-}
-
-function formatSaleEnd(value: string | null) {
-  if (!value) return 'To be announced';
-  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(value));
 }

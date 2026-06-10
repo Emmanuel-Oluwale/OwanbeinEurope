@@ -38,7 +38,7 @@ export default function OrganizerPage() {
         </nav>
       </header>
 
-      <OrganizerGate area="organizer">
+      <OrganizerGate area="finance">
         <section className="section">
           <div className="container">
             <p className="kicker">Organizer Hub</p>

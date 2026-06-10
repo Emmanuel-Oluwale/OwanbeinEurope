@@ -31,6 +31,17 @@ export function buildVariableSymbol(sequence: number, year = 2026) {
 
 export function pickPaymentAccount(orderCount: number): PaymentAccount {
   const index = (orderCount % 4) + 1;
+  return buildPaymentAccount(index);
+}
+
+export function getPaymentAccountByLabel(label?: string | null): PaymentAccount | null {
+  if (!label) return null;
+  const index = paymentHandlers.findIndex((handler) => handler.toLowerCase() === label.toLowerCase()) + 1;
+  if (!index) return null;
+  return buildPaymentAccount(index);
+}
+
+function buildPaymentAccount(index: number): PaymentAccount {
   const iban = process.env[`PAYMENT_ACCOUNT_${index}_IBAN`];
   const name = process.env[`PAYMENT_ACCOUNT_${index}_NAME`];
   const bic = process.env[`PAYMENT_ACCOUNT_${index}_BIC`];

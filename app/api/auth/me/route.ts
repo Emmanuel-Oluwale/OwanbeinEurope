@@ -3,6 +3,7 @@ import { getOrganizerRole, type OrganizerRole } from '@/lib/organizerAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const roleGroups: Record<string, OrganizerRole[]> = {
+  admin: ['admin'],
   finance: ['finance'],
   checkin: ['checkin'],
   organizer: ['finance', 'checkin', 'marketing']

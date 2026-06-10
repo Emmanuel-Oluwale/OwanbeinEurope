@@ -23,6 +23,11 @@ const links = [
     title: 'Public Event Page',
     href: '/events/naija-to-prague-2026',
     description: 'Open the live event page exactly as guests see it.'
+  },
+  {
+    title: 'Media Manager',
+    href: '/admin/media',
+    description: 'Upload event videos, flyers, sponsor logos, and gallery images to Supabase Storage.'
   }
 ];
 

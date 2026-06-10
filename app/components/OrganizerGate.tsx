@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabaseBrowser';
 
 type OrganizerGateProps = {
-  area: 'finance' | 'checkin';
+  area: 'admin' | 'finance' | 'checkin';
+  nextPath?: string;
   children: React.ReactNode;
 };
 
-export function OrganizerGate({ area, children }: OrganizerGateProps) {
+export function OrganizerGate({ area, nextPath, children }: OrganizerGateProps) {
   const router = useRouter();
   const [status, setStatus] = useState<'checking' | 'authorized' | 'blocked'>('checking');
   const [message, setMessage] = useState('Checking organizer access...');
@@ -19,7 +20,7 @@ export function OrganizerGate({ area, children }: OrganizerGateProps) {
       const response = await fetch(`/api/auth/me?area=${area}`);
 
       if (response.status === 401) {
-        router.replace(`/login?next=/${area}`);
+        router.replace(`/login?next=${encodeURIComponent(nextPath || `/${area}`)}`);
         return;
       }
 
@@ -39,12 +40,12 @@ export function OrganizerGate({ area, children }: OrganizerGateProps) {
     }
 
     checkAccess();
-  }, [area, router]);
+  }, [area, nextPath, router]);
 
   async function signOut() {
     const supabase = getSupabaseBrowser();
     await supabase.auth.signOut();
-    router.replace(`/login?next=/${area}`);
+    router.replace(`/login?next=${encodeURIComponent(nextPath || `/${area}`)}`);
   }
 
   if (status === 'checking') {

@@ -25,6 +25,24 @@ const links = [
   }
 ];
 
+const exports = [
+  {
+    title: 'Attendees CSV',
+    href: '/api/admin/exports/attendees',
+    description: 'Full guest list with attendee contact details, ticket codes, and payment status. Admin only.'
+  },
+  {
+    title: 'Finance CSV',
+    href: '/api/admin/exports/finance',
+    description: 'Order revenue, payment status, handlers, variable symbols, and approval details.'
+  },
+  {
+    title: 'Check-in CSV',
+    href: '/api/admin/exports/checkins',
+    description: 'Checked-in guests, ticket codes, timestamps, and organizer audit details. Admin only.'
+  }
+];
+
 export default function OrganizerPage() {
   return (
     <main>
@@ -77,6 +95,17 @@ export default function OrganizerPage() {
                   <a className="button secondary submit-button" href={link.href}>Open {link.title}</a>
                 </article>
               ))}
+            </div>
+
+            <div className="summary-panel">
+              <p className="kicker">CSV Exports</p>
+              <h2>Download event data.</h2>
+              <p className="muted">Exports use your organizer permissions. Finance users only receive finance data they are allowed to see.</p>
+              <div className="actions compact-actions">
+                {exports.map((item) => (
+                  <a className="button secondary" href={item.href} key={item.href}>{item.title}</a>
+                ))}
+              </div>
             </div>
           </div>
         </section>

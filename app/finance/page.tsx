@@ -95,6 +95,7 @@ export default function FinancePage() {
           <a className="logo" href="/">Owanbe Finance</a>
           <div className="nav-links">
             <a href="/checkin">Check-in</a>
+            <a className="button secondary compact" href="/api/admin/exports/finance">Export CSV</a>
             <button className="button secondary compact" type="button" onClick={loadOrders}>Refresh</button>
           </div>
         </nav>

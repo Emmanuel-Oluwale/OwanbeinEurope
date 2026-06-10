@@ -33,6 +33,11 @@ const links = [
     title: 'Event Settings',
     href: '/admin/settings',
     description: 'Update live ticket prices, quantities, sale windows, and ticket visibility.'
+  },
+  {
+    title: 'Admin Analytics',
+    href: '/admin/analytics',
+    description: 'Track revenue, ticket sales, handler performance, emails, and check-in progress.'
   }
 ];
 

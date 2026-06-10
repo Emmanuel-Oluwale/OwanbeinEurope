@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
+const instagramUrl = 'https://www.instagram.com/owanbeineurope';
+
 type LookupResult = {
   error?: string;
   orderNumber?: string;
@@ -9,6 +11,10 @@ type LookupResult = {
   paymentStatus?: string;
   variableSymbol?: string;
   paymentAccountLabel?: string;
+  paymentQrUrl?: string | null;
+  accountName?: string;
+  iban?: string;
+  bic?: string;
   tickets?: Array<{
     attendee_name: string;
     attendee_email: string;
@@ -64,7 +70,10 @@ export default function MyTicketPage() {
       <header className="header">
         <nav className="container nav">
           <a className="logo" href="/">Owanbe in Europe</a>
-          <a className="button secondary compact" href="/checkout">Checkout</a>
+          <div className="nav-links">
+            <a href="/">Home</a>
+            <a href={instagramUrl} target="_blank" rel="noreferrer">Instagram</a>
+          </div>
         </nav>
       </header>
       <section className="section">
@@ -87,7 +96,28 @@ export default function MyTicketPage() {
                     <p className="kicker">{result.orderNumber}</p>
                     <h3>Status: {result.paymentStatus}</h3>
                     <p>Amount: {result.amountCzk?.toLocaleString('cs-CZ')} CZK</p>
-                    {result.paymentStatus === 'pending' && <p>Payment is awaiting finance confirmation. Use variable symbol {result.variableSymbol} if you still need to complete transfer.</p>}
+
+                    {result.paymentStatus === 'pending' && (
+                      <div className="attendee-box">
+                        <h3>Payment Pending</h3>
+                        <p>We are still waiting for finance to confirm your payment. If you have not paid yet, use the payment details below.</p>
+                        {result.paymentQrUrl && <img className="ticket-qr" src={result.paymentQrUrl} alt="Bank transfer QR payment code" />}
+                        <div className="payment-details">
+                          <p><span>Recipient</span><strong>{result.accountName || result.paymentAccountLabel || 'Assigned account'}</strong></p>
+                          <p><span>IBAN</span><strong>{result.iban || 'Check your payment email'}</strong></p>
+                          <p><span>BIC</span><strong>{result.bic || 'Check your payment email'}</strong></p>
+                          <p><span>Variable Symbol</span><strong>{result.variableSymbol}</strong></p>
+                          <p><span>Order Reference</span><strong>{result.orderNumber}</strong></p>
+                          <p><span>Amount</span><strong>{result.amountCzk?.toLocaleString('cs-CZ')} CZK</strong></p>
+                        </div>
+                        <div className="notice">
+                          <p><strong>How to pay with QR:</strong> Open your banking app, choose its QR payment scanner, then scan the QR code above.</p>
+                          <p>Do not scan this QR code with your normal phone camera. Use your bank app's payment scanner.</p>
+                          <p>If your bank does not support QR payments, use the IBAN, BIC, amount, variable symbol, and order reference shown above.</p>
+                        </div>
+                      </div>
+                    )}
+
                     {result.paymentStatus === 'paid' && result.tickets?.map((ticket) => (
                       <div className="attendee-box" key={ticket.ticket_code}>
                         <h3>{ticket.attendee_name}</h3>

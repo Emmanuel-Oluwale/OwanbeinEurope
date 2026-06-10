@@ -28,6 +28,11 @@ const links = [
     title: 'Media Manager',
     href: '/admin/media',
     description: 'Upload event videos, flyers, sponsor logos, and gallery images to Supabase Storage.'
+  },
+  {
+    title: 'Event Settings',
+    href: '/admin/settings',
+    description: 'Update live ticket prices, quantities, sale windows, and ticket visibility.'
   }
 ];
 

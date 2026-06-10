@@ -94,6 +94,8 @@ button, input, select { font: inherit; }
 .attendee-list { color: #d7cbb7; border-top: 1px solid rgba(244,185,66,.18); margin-top: 14px; padding-top: 12px; }
 .ticket-qr { display: block; width: min(220px, 100%); height: auto; background: #fff; border-radius: 8px; padding: 10px; margin: 14px 0; }
 .media-thumb { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 8px; border: 1px solid rgba(244,185,66,.22); background: #0d0a06; margin: 12px 0; }
+.toggle-row { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 18px; color: #d7cbb7; font-weight: 800; }
+.toggle-row label { display: inline-flex; align-items: center; gap: 8px; }
 .warning-text { color: #ffd37a; font-weight: 800; }
 .organizer-session { position: fixed; right: 16px; bottom: 16px; z-index: 30; }
 @media (max-width: 900px) { .grid.two, .grid.three, .grid.four, .stat-strip, .countdown, .checkout-grid { grid-template-columns: 1fr; } .nav { padding: 16px 0; align-items: flex-start; flex-direction: column; } .nav-links { flex-wrap: wrap; } .flyer-card { min-height: 520px; } .section { padding: 60px 0; } .section-head { align-items: start; flex-direction: column; } .ticket-picker { grid-template-columns: 1fr; } .summary-panel { position: static; } }

@@ -38,6 +38,11 @@ const links = [
     title: 'Admin Analytics',
     href: '/admin/analytics',
     description: 'Track revenue, ticket sales, handler performance, emails, and check-in progress.'
+  },
+  {
+    title: 'Live Dashboard',
+    href: '/admin/live',
+    description: 'Monitor event-day revenue, pending payments, issued tickets, and guest check-ins.'
   }
 ];
 

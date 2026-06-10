@@ -34,6 +34,7 @@ export default function FinancePage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [resendingId, setResendingId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<FinanceOrder | null>(null);
 
   async function loadOrders() {
@@ -59,6 +60,19 @@ export default function FinancePage() {
     setSelectedOrder(null);
     setApprovingId(null);
     await loadOrders();
+  }
+
+  async function resendPayment(orderId: string) {
+    setResendingId(orderId);
+    setMessage('Resending payment instructions...');
+    const response = await fetch('/api/admin/resend/payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId })
+    });
+    const data = await response.json();
+    setMessage(data.error || data.message || 'Payment instructions resent.');
+    setResendingId(null);
   }
 
   useEffect(() => {
@@ -178,7 +192,12 @@ export default function FinancePage() {
                         <p key={`${order.id}-${attendee.attendee_email}`}>{attendee.attendee_name} - {attendee.attendee_email}</p>
                       ))}
                     </div>
-                    <button className="button green submit-button" type="button" onClick={() => setSelectedOrder(order)}>Review & Approve</button>
+                    <div className="actions compact-actions">
+                      <button className="button secondary" type="button" onClick={() => resendPayment(order.id)} disabled={resendingId === order.id}>
+                        {resendingId === order.id ? 'Resending...' : 'Resend Payment Email'}
+                      </button>
+                      <button className="button green" type="button" onClick={() => setSelectedOrder(order)}>Review & Approve</button>
+                    </div>
                   </article>
                 ))}
               </div>

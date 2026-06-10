@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { OrganizerGate } from '@/app/components/OrganizerGate';
 
 const links = [
@@ -44,6 +45,30 @@ const exports = [
 ];
 
 export default function OrganizerPage() {
+  const [resendOrderNumber, setResendOrderNumber] = useState('');
+  const [resendMessage, setResendMessage] = useState('');
+  const [resendingType, setResendingType] = useState<'payment' | 'tickets' | null>(null);
+
+  async function resendEmail(type: 'payment' | 'tickets') {
+    const orderNumber = resendOrderNumber.trim();
+    if (!orderNumber) {
+      setResendMessage('Enter an order number first.');
+      return;
+    }
+
+    setResendingType(type);
+    setResendMessage(type === 'payment' ? 'Resending payment instructions...' : 'Resending ticket email...');
+
+    const response = await fetch(`/api/admin/resend/${type}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderNumber })
+    });
+    const data = await response.json();
+    setResendMessage(data.error || data.message || 'Email resent.');
+    setResendingType(null);
+  }
+
   return (
     <main>
       <header className="header">
@@ -106,6 +131,28 @@ export default function OrganizerPage() {
                   <a className="button secondary" href={item.href} key={item.href}>{item.title}</a>
                 ))}
               </div>
+            </div>
+
+            <div className="summary-panel">
+              <p className="kicker">Email Support</p>
+              <h2>Resend customer emails.</h2>
+              <p className="muted">Use an order number to resend payment instructions or ticket-ready emails. Ticket emails only work after payment approval.</p>
+              <label className="field-label">Order number</label>
+              <input
+                className="field"
+                placeholder="OIE-2026-000001"
+                value={resendOrderNumber}
+                onChange={(event) => setResendOrderNumber(event.target.value)}
+              />
+              <div className="actions compact-actions">
+                <button className="button secondary" type="button" onClick={() => resendEmail('payment')} disabled={Boolean(resendingType)}>
+                  {resendingType === 'payment' ? 'Sending...' : 'Resend Payment Email'}
+                </button>
+                <button className="button green" type="button" onClick={() => resendEmail('tickets')} disabled={Boolean(resendingType)}>
+                  {resendingType === 'tickets' ? 'Sending...' : 'Resend Ticket Email'}
+                </button>
+              </div>
+              {resendMessage && <div className={`result-box ${resendMessage.toLowerCase().includes('not') || resendMessage.toLowerCase().includes('cannot') || resendMessage.toLowerCase().includes('error') ? 'error' : ''}`}>{resendMessage}</div>}
             </div>
           </div>
         </section>

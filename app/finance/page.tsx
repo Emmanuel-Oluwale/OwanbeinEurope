@@ -14,9 +14,17 @@ type FinanceOrder = {
   payment_status: string;
   variable_symbol: string;
   payment_account_label: string;
+  approved_at?: string | null;
+  approved_by?: string | null;
   order_attendees?: Array<{
     attendee_name: string;
     attendee_email: string;
+  }>;
+  tickets?: Array<{
+    ticket_code: string;
+    attendee_name: string;
+    attendee_email: string;
+    status: string;
   }>;
 };
 
@@ -32,6 +40,7 @@ export default function FinancePage() {
   const [scope, setScope] = useState<FinanceScope | null>(null);
   const [message, setMessage] = useState('');
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'pending' | 'paid' | 'all'>('pending');
   const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [resendingId, setResendingId] = useState<string | null>(null);
@@ -39,7 +48,7 @@ export default function FinancePage() {
 
   async function loadOrders() {
     setLoading(true);
-    const response = await fetch('/api/finance/orders');
+    const response = await fetch(`/api/finance/orders?status=${statusFilter}`);
     const data = await response.json();
     setOrders(data.orders || []);
     setScope(data.scope || null);
@@ -75,9 +84,22 @@ export default function FinancePage() {
     setResendingId(null);
   }
 
+  async function resendTickets(orderId: string) {
+    setResendingId(orderId);
+    setMessage('Resending ticket email...');
+    const response = await fetch('/api/admin/resend/tickets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId })
+    });
+    const data = await response.json();
+    setMessage(data.error || data.message || 'Ticket email resent.');
+    setResendingId(null);
+  }
+
   useEffect(() => {
     loadOrders();
-  }, []);
+  }, [statusFilter]);
 
   const filteredOrders = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -121,7 +143,7 @@ export default function FinancePage() {
             <h1 className="section-title">Payment approvals.</h1>
             <p className="muted">
               {scope?.isAdmin
-                ? 'Admin view: you can see and approve all pending orders.'
+                ? 'Admin view: you can see all finance orders and approve pending payments.'
                 : scope?.handler
                   ? `Handler view: you can only see and approve orders assigned to ${scope.handler}.`
                   : 'Your account is not linked to a payment handler.'}
@@ -153,6 +175,18 @@ export default function FinancePage() {
             </div>
 
             <div className="summary-panel">
+              <div className="actions compact-actions">
+                {(['pending', 'paid', 'all'] as const).map((status) => (
+                  <button
+                    className={`button ${statusFilter === status ? 'green' : 'secondary'}`}
+                    key={status}
+                    type="button"
+                    onClick={() => setStatusFilter(status)}
+                  >
+                    {status === 'all' ? 'All Orders' : status[0].toUpperCase() + status.slice(1)}
+                  </button>
+                ))}
+              </div>
               <label className="field-label">Search orders</label>
               <input
                 className="field"
@@ -165,7 +199,7 @@ export default function FinancePage() {
             {loading ? (
               <div className="result-box">Loading finance orders...</div>
             ) : filteredOrders.length === 0 ? (
-              <div className="result-box">No pending orders found.</div>
+              <div className="result-box">No finance orders found.</div>
             ) : (
               <div className="grid two">
                 {filteredOrders.map((order) => (
@@ -185,6 +219,8 @@ export default function FinancePage() {
                       <p><span>Variable Symbol</span><strong>{order.variable_symbol}</strong></p>
                       <p><span>Status</span><strong>{order.payment_status}</strong></p>
                       <p><span>Created</span><strong>{new Date(order.created_at).toLocaleString()}</strong></p>
+                      {order.approved_at && <p><span>Approved</span><strong>{new Date(order.approved_at).toLocaleString()}</strong></p>}
+                      {order.approved_by && <p><span>Approved By</span><strong>{order.approved_by}</strong></p>}
                     </div>
                     <div className="attendee-list">
                       <p className="kicker">Attendees</p>
@@ -193,10 +229,22 @@ export default function FinancePage() {
                       ))}
                     </div>
                     <div className="actions compact-actions">
-                      <button className="button secondary" type="button" onClick={() => resendPayment(order.id)} disabled={resendingId === order.id}>
-                        {resendingId === order.id ? 'Resending...' : 'Resend Payment Email'}
-                      </button>
-                      <button className="button green" type="button" onClick={() => setSelectedOrder(order)}>Review & Approve</button>
+                      {order.payment_status === 'pending' && (
+                        <>
+                          <button className="button secondary" type="button" onClick={() => resendPayment(order.id)} disabled={resendingId === order.id}>
+                            {resendingId === order.id ? 'Resending...' : 'Resend Payment Email'}
+                          </button>
+                          <button className="button green" type="button" onClick={() => setSelectedOrder(order)}>Review & Approve</button>
+                        </>
+                      )}
+                      {order.payment_status === 'paid' && (
+                        <>
+                          <a className="button secondary" href={`/my-ticket?order=${encodeURIComponent(order.order_number)}`}>Open Tickets</a>
+                          <button className="button green" type="button" onClick={() => resendTickets(order.id)} disabled={resendingId === order.id}>
+                            {resendingId === order.id ? 'Resending...' : 'Resend Ticket Email'}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </article>
                 ))}

@@ -196,6 +196,7 @@ export default function CheckoutPage() {
           <a className="logo" href="/">Owanbe in Europe</a>
           <div className="nav-links">
             <a href="/events/naija-to-prague-2026">Event</a>
+            <a href="/my-orders">My Orders</a>
             <a href="/my-ticket">Find My Ticket</a>
           </div>
         </nav>
@@ -307,6 +308,7 @@ export default function CheckoutPage() {
                     <p>{result.instructions}</p>
                     <div className="actions compact-actions">
                       <a className="button secondary" href="/my-ticket">Find this order later</a>
+                      <a className="button secondary" href={`/my-orders?email=${encodeURIComponent(buyerEmail)}`}>View My Orders</a>
                       <button className="button green" type="button" onClick={startNewOrder}>Start a new order</button>
                     </div>
                   </>

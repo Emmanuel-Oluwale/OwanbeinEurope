@@ -16,6 +16,7 @@ export default function EventPage() {
           <a className="logo" href="/">Owanbe in Europe</a>
           <div className="nav-links">
             <a href="/#tickets">Tickets</a>
+            <a href="/my-orders">My Orders</a>
             <a href="/my-ticket">Find My Ticket</a>
             <a href={eventDetails.instagramUrl}>Instagram</a>
           </div>

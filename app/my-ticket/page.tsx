@@ -72,6 +72,7 @@ export default function MyTicketPage() {
           <a className="logo" href="/">Owanbe in Europe</a>
           <div className="nav-links">
             <a href="/">Home</a>
+            <a href="/my-orders">My Orders</a>
             <a href={instagramUrl} target="_blank" rel="noreferrer">Instagram</a>
           </div>
         </nav>

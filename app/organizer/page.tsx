@@ -20,6 +20,11 @@ const links = [
     description: 'Help guests recover pending payment details or retrieve issued ticket QR codes.'
   },
   {
+    title: 'My Orders',
+    href: '/my-orders',
+    description: 'Customer self-service dashboard for viewing orders, payment details, and issued tickets.'
+  },
+  {
     title: 'Public Event Page',
     href: '/events/naija-to-prague-2026',
     description: 'Open the live event page exactly as guests see it.'
